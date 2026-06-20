@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Números</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0f0f0f;
+    --surface:   #1a1a1a;
+    --border:    #2a2a2a;
+    --text:      #e8e8e8;
+    --muted:     #666;
+    --faint:     #333;
+    --mono:      'Courier New', Courier, monospace;
+    --sans:      system-ui, -apple-system, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 560px;
+  }
+
+  header {
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.25rem;
+  }
+
+  header h1 {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  header p {
+    font-size: 11px;
+    color: var(--faint);
+    font-family: var(--mono);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .balls-area {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: 72px;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+
+  .ball {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 400;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), opacity 0.2s ease, color 0.2s, border-color 0.2s;
+    opacity: 0.2;
+    transform: scale(0.7);
+    user-select: none;
+  }
+
+  .ball.active {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .ball.c0 { color: #5b9bd5; border-color: #1e3a52; background: #111d28; }
+  .ball.c1 { color: #6dbf82; border-color: #1c3d26; background: #111a14; }
+  .ball.c2 { color: #d4a84b; border-color: #4a3510; background: #201708; }
+  .ball.c3 { color: #c97db5; border-color: #3d1f38; background: #1c1018; }
+  .ball.c4 { color: #7f9cf5; border-color: #1e2654; background: #111428; }
+  .ball.c5 { color: #e07b6b; border-color: #4a1f18; background: #201210; }
+
+  .meta {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+    min-height: 16px;
+  }
+
+  .copy-area {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 10px 14px;
+  }
+
+  .copy-area.visible { display: flex; }
+
+  .copy-nums {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: 0.1em;
+    user-select: text;
+    -webkit-user-select: text;
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .copy-btn:hover { border-color: #555; color: var(--text); }
+  .copy-btn.ok { color: #6dbf82; border-color: #1c3d26; }
+
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 13px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    border-radius: 2px;
+  }
+
+  .btn:hover { border-color: #444; background: #1e1e1e; }
+  .btn:active { transform: scale(0.99); }
+
+  .history {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1.25rem;
+  }
+
+  .history-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 1rem;
+  }
+
+  .hist-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  .hist-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+    min-width: 28px;
+  }
+
+  .hist-ball {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+  }
+
+  .hist-ball.c0 { color: #5b9bd5; border-color: #1e3a52; background: #111d28; }
+  .hist-ball.c1 { color: #6dbf82; border-color: #1c3d26; background: #111a14; }
+  .hist-ball.c2 { color: #d4a84b; border-color: #4a3510; background: #201708; }
+  .hist-ball.c3 { color: #c97db5; border-color: #3d1f38; background: #1c1018; }
+  .hist-ball.c4 { color: #7f9cf5; border-color: #1e2654; background: #111428; }
+  .hist-ball.c5 { color: #e07b6b; border-color: #4a1f18; background: #201210; }
+
+  footer {
+    margin-top: 2.5rem;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--faint);
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Gerador de Números</h1>
+    <p>6 números únicos · 1 a 60 · ordenados</p>
+  </header>
+
+  <div class="balls-area" id="balls-area">
+    <div class="ball c0" id="b0">—</div>
+    <div class="ball c1" id="b1">—</div>
+    <div class="ball c2" id="b2">—</div>
+    <div class="ball c3" id="b3">—</div>
+    <div class="ball c4" id="b4">—</div>
+    <div class="ball c5" id="b5">—</div>
+  </div>
+
+  <div class="meta" id="meta">aguardando geração</div>
+
+  <div class="copy-area" id="copy-area">
+    <span class="copy-nums" id="copy-nums"></span>
+    <button class="copy-btn" id="copy-btn" onclick="copiar()">[ copiar ]</button>
+  </div>
+
+  <button class="btn" onclick="gerar()">[ GERAR NÚMEROS ]</button>
+
+  <div class="history" id="history" style="display:none">
+    <div class="history-label">Histórico</div>
+    <div id="hist-rows"></div>
+  </div>
+
+  <footer id="footer"></footer>
+
+</div>
+
+<script>
+  let count = 0;
+  let histList = [];
+  let lastNums = [];
+
+  function gerar() {
+    const pool = Array.from({length: 60}, (_, i) => i + 1);
+    const nums = [];
+    for (let i = 0; i < 6; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      nums.push(pool.splice(idx, 1)[0]);
+    }
+    nums.sort((a, b) => a - b);
+    count++;
+    lastNums = nums;
+
+    const balls = document.querySelectorAll('.ball');
+    balls.forEach(b => b.classList.remove('active'));
+
+    nums.forEach((n, i) => {
+      setTimeout(() => {
+        const b = document.getElementById('b' + i);
+        b.textContent = n < 10 ? '0' + n : n;
+        b.classList.add('active');
+      }, i * 100);
+    });
+
+    const now = new Date();
+    const ts = now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+    document.getElementById('meta').textContent = 'geração #' + count + '  ·  ' + ts;
+
+    const copyArea = document.getElementById('copy-area');
+    document.getElementById('copy-nums').textContent = nums.map(n => pad(n)).join('  ');
+    document.getElementById('copy-btn').textContent = '[ copiar ]';
+    document.getElementById('copy-btn').classList.remove('ok');
+    copyArea.classList.add('visible');
+
+    histList.unshift({ nums, id: count });
+    if (histList.length > 8) histList.pop();
+    renderHistory();
+
+    document.getElementById('footer').textContent =
+      'total de gerações nesta sessão: ' + count;
+  }
+
+  function copiar() {
+    const texto = lastNums.map(n => pad(n)).join('  ');
+    const btn = document.getElementById('copy-btn');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(texto).then(() => {
+        btn.textContent = '[ copiado! ]';
+        btn.classList.add('ok');
+        setTimeout(() => {
+          btn.textContent = '[ copiar ]';
+          btn.classList.remove('ok');
+        }, 2000);
+      }).catch(() => copiarFallback(texto, btn));
+    } else {
+      copiarFallback(texto, btn);
+    }
+  }
+
+  function copiarFallback(texto, btn) {
+    const el = document.createElement('textarea');
+    el.value = texto;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      document.execCommand('copy');
+      btn.textContent = '[ copiado! ]';
+      btn.classList.add('ok');
+      setTimeout(() => {
+        btn.textContent = '[ copiar ]';
+        btn.classList.remove('ok');
+      }, 2000);
+    } catch(e) {}
+    document.body.removeChild(el);
+  }
+
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+  function renderHistory() {
+    if (histList.length < 2) return;
+    document.getElementById('history').style.display = 'block';
+    document.getElementById('hist-rows').innerHTML = histList.slice(1).map(h =>
+      `<div class="hist-row">
+        <span class="hist-id">#${h.id}</span>
+        ${h.nums.map((n, i) =>
+          `<div class="hist-ball c${i}">${pad(n)}</div>`
+        ).join('')}
+      </div>`
+    ).join('');
+  }
+</script>
+</body>
+</html>
