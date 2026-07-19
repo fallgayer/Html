@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapa Comportamental DISC</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --panel:#12181f;
+    --panel-border:#232b34;
+    --text:#c9d1d9;
+    --text-dim:#7d8590;
+    --d-color:#e0555a;
+    --i-color:#e0a83f;
+    --s-color:#4bbf8a;
+    --c-color:#4f9de0;
+    --accent:#c9d1d9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Courier New', Consolas, monospace;
+    padding:24px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+  header{margin-bottom:28px;border-bottom:1px solid var(--panel-border);padding-bottom:16px;}
+  h1{
+    font-size:1.5rem;
+    letter-spacing:1px;
+    margin:0 0 6px 0;
+    color:var(--accent);
+  }
+  header p{margin:0;color:var(--text-dim);font-size:0.85rem;}
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  @media (max-width:920px){
+    .grid{grid-template-columns:1fr;}
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:6px;
+    padding:18px 20px;
+    margin-bottom:20px;
+  }
+  .panel h2{
+    font-size:0.95rem;
+    margin:0 0 14px 0;
+    text-transform:uppercase;
+    letter-spacing:1.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .attr-row{margin-bottom:14px;}
+  .attr-row label{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.82rem;
+    margin-bottom:4px;
+    color:var(--text);
+  }
+  .attr-row .val{color:var(--text-dim);}
+  input[type=range]{
+    width:100%;
+    -webkit-appearance:none;
+    height:4px;
+    border-radius:2px;
+    background:#2a323c;
+    outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid var(--bg);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px;height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    cursor:pointer;
+    border:2px solid var(--bg);
+  }
+
+  canvas{width:100%;height:auto;display:block;}
+
+  .result-box{
+    border-left:3px solid var(--accent);
+    padding:14px 16px;
+    background:#0f1420;
+    border-radius:4px;
+    margin-top:12px;
+  }
+  .result-title{
+    font-size:1.1rem;
+    margin:0 0 10px 0;
+    letter-spacing:0.5px;
+  }
+  .result-title span{font-weight:bold;}
+  .strengths, .weaknesses{margin-bottom:10px;}
+  .strengths h3, .weaknesses h3{
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    margin:0 0 4px 0;
+    color:var(--text-dim);
+  }
+  .strengths p, .weaknesses p{margin:0;font-size:0.86rem;line-height:1.5;}
+
+  .scores-line{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-top:12px;
+    font-size:0.78rem;
+  }
+  .scores-line span{
+    padding:4px 8px;
+    border-radius:4px;
+    background:#1a212b;
+  }
+
+  button#pdfBtn{
+    margin-top:8px;
+    width:100%;
+    padding:12px;
+    background:var(--accent);
+    color:#0d1117;
+    border:none;
+    border-radius:4px;
+    font-family:inherit;
+    font-size:0.9rem;
+    font-weight:bold;
+    letter-spacing:1px;
+    cursor:pointer;
+    text-transform:uppercase;
+  }
+  button#pdfBtn:hover{opacity:0.88;}
+
+  footer{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:0.72rem;
+    margin-top:30px;
+    padding-top:14px;
+    border-top:1px solid var(--panel-border);
+  }
+
+  @media print{
+    body{background:#fff;color:#111;padding:0;}
+    input[type=range]{display:none;}
+    .attr-row .val{font-weight:bold;}
+    button#pdfBtn{display:none;}
+    .panel{border:1px solid #ccc;background:#fff;break-inside:avoid;}
+    .grid{grid-template-columns:1fr 1fr;}
+    footer{display:none;}
+    .result-box{border-left:3px solid #333;background:#f7f7f7;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MAPA COMPORTAMENTAL // DISC</h1>
+    <p>Ajuste os 16 atributos de 1 a 5 conforme se reconhece em cada um. O mapa e o resultado são recalculados em tempo real.</p>
+  </header>
+
+  <div class="grid">
+    <!-- LEFT: sliders (neutros, sem indicação de perfil) -->
+    <div>
+      <div class="panel" id="panel-attrs">
+        <h2>Avalie os 16 atributos</h2>
+        <div id="sliders-all"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: charts + result -->
+    <div>
+      <div class="panel">
+        <h2>Mapa dos 16 atributos</h2>
+        <canvas id="chart16" width="480" height="480"></canvas>
+      </div>
+      <div class="panel">
+        <h2>Perfil síntese (D · I · S · C)</h2>
+        <canvas id="chart4" width="480" height="380"></canvas>
+        <div class="scores-line" id="scoresLine"></div>
+      </div>
+      <div class="panel" id="resultPanel">
+        <h2>Resultado</h2>
+        <div class="result-box">
+          <p class="result-title">Conforme suas escolhas, você parece ser mais <span id="resultProfile">—</span></p>
+          <div class="strengths">
+            <h3>Pontos fortes</h3>
+            <p id="resultStrengths"></p>
+          </div>
+          <div class="weaknesses">
+            <h3>Pontos de atenção</h3>
+            <p id="resultWeaknesses"></p>
+          </div>
+        </div>
+        <button id="pdfBtn">Gerar PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>Ferramenta autocontida — sem dependências externas. Uso para autoconhecimento, não é instrumento clínico.</footer>
+</div>
+
+<script>
+const PROFILES = {
+  D: {
+    label: "Dominante",
+    color: "#e0555a",
+    attrs: [
+      { id: "d1", name: "Decisão rápida" },
+      { id: "d2", name: "Assertividade" },
+      { id: "d3", name: "Foco em resultados" },
+      { id: "d4", name: "Competitividade" }
+    ],
+    strengths: "Decide rápido, assume riscos com coragem e mantém o foco em metas e resultados concretos, mesmo sob pressão.",
+    weaknesses: "Pode perder a paciência com processos lentos, atropelar relações no caminho e ter dificuldade em delegar ou ouvir objeções."
+  },
+  I: {
+    label: "Influente",
+    color: "#e0a83f",
+    attrs: [
+      { id: "i1", name: "Comunicação" },
+      { id: "i2", name: "Entusiasmo" },
+      { id: "i3", name: "Sociabilidade" },
+      { id: "i4", name: "Persuasão" }
+    ],
+    strengths: "Comunica-se com facilidade, contagia o ambiente com entusiasmo e constrói redes de relacionamento rapidamente.",
+    weaknesses: "Pode perder o foco em detalhes e rotinas, decidir por impulso emocional e falar mais do que ouve."
+  },
+  S: {
+    label: "Segurança",
+    color: "#4bbf8a",
+    attrs: [
+      { id: "s1", name: "Paciência" },
+      { id: "s2", name: "Cooperação" },
+      { id: "s3", name: "Lealdade" },
+      { id: "s4", name: "Consistência" }
+    ],
+    strengths: "É paciente, leal e um ótimo ouvinte, trazendo estabilidade emocional e cooperação para o grupo.",
+    weaknesses: "Pode resistir a mudanças, evitar conflitos necessários e demorar para decidir quando a situação exige rapidez."
+  },
+  C: {
+    label: "Controle",
+    color: "#4f9de0",
+    attrs: [
+      { id: "c1", name: "Precisão" },
+      { id: "c2", name: "Análise" },
+      { id: "c3", name: "Organização" },
+      { id: "c4", name: "Cautela" }
+    ],
+    strengths: "Analisa com critério, preza pela precisão e organização, e entrega com alto padrão de qualidade.",
+    weaknesses: "Pode cair em paralisia por análise, ser excessivamente perfeccionista e ter dificuldade em decidir sem todos os dados."
+  }
+};
+
+const state = {};
+Object.keys(PROFILES).forEach(k => {
+  PROFILES[k].attrs.forEach(a => state[a.id] = 3);
+});
+
+// Ordem intercalada e neutra: mistura os perfis para não sugerir agrupamento
+const ORDER_KEYS = ["D","I","S","C"];
+const flatAttrs = [];
+for(let i=0;i<4;i++){
+  ORDER_KEYS.forEach(k => flatAttrs.push(PROFILES[k].attrs[i]));
+}
+
+// Build sliders (sem cor, sem rótulo de perfil)
+function buildSliders(){
+  const container = document.getElementById('sliders-all');
+  flatAttrs.forEach(a => {
+    const row = document.createElement('div');
+    row.className = 'attr-row';
+    row.innerHTML = `
+      <label>${a.name} <span class="val" id="val-${a.id}">${state[a.id]}</span></label>
+      <input type="range" min="1" max="5" step="1" value="${state[a.id]}" id="slider-${a.id}">
+    `;
+    container.appendChild(row);
+  });
+}
+
+function attachListeners(){
+  flatAttrs.forEach(a => {
+    const slider = document.getElementById('slider-' + a.id);
+    slider.addEventListener('input', e => {
+      state[a.id] = parseInt(e.target.value, 10);
+      document.getElementById('val-' + a.id).textContent = state[a.id];
+      update();
+    });
+  });
+}
+
+// ---- Radar drawing (generic, canvas-based, no libraries) ----
+function drawRadar(canvas, labels, values, colors, maxVal, opts){
+  opts = opts || {};
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+  const cx = w/2, cy = h/2 + (opts.labelPad ? 6 : 0);
+  const radius = Math.min(w,h)/2 - (opts.margin || 60);
+  const n = labels.length;
+  const angleStep = (Math.PI*2)/n;
+  const startAngle = -Math.PI/2;
+
+  // grid rings
+  ctx.strokeStyle = '#232b34';
+  ctx.lineWidth = 1;
+  for(let ring=1; ring<=maxVal; ring++){
+    ctx.beginPath();
+    for(let i=0;i<=n;i++){
+      const ang = startAngle + i*angleStep;
+      const r = radius * (ring/maxVal);
+      const x = cx + r*Math.cos(ang);
+      const y = cy + r*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // anel pontilhado indicando a média
+  if(typeof opts.avgValue === 'number'){
+    ctx.save();
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle = opts.avgColor || '#ffffff';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    for(let i=0;i<=n;i++){
+      const ang = startAngle + i*angleStep;
+      const r = radius * (opts.avgValue/maxVal);
+      const x = cx + r*Math.cos(ang);
+      const y = cy + r*Math.sin(ang);
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+
+    // rótulo da média
+    ctx.save();
+    ctx.setLineDash([]);
+    ctx.fillStyle = opts.avgColor || '#ffffff';
+    ctx.font = '10px Consolas, monospace';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('média ' + opts.avgValue.toFixed(1), cx + 4, cy - radius*(opts.avgValue/maxVal) - 4);
+    ctx.restore();
+  }
+
+  // axis lines + labels
+  ctx.font = (opts.fontSize || 11) + 'px Consolas, monospace';
+  for(let i=0;i<n;i++){
+    const ang = startAngle + i*angleStep;
+    const x2 = cx + radius*Math.cos(ang);
+    const y2 = cy + radius*Math.sin(ang);
+    ctx.strokeStyle = '#2a323c';
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.lineTo(x2,y2);
+    ctx.stroke();
+
+    const lx = cx + (radius+18)*Math.cos(ang);
+    const ly = cy + (radius+18)*Math.sin(ang);
+    ctx.fillStyle = colors[i] || '#c9d1d9';
+    ctx.textAlign = Math.abs(Math.cos(ang)) < 0.15 ? 'center' : (Math.cos(ang) > 0 ? 'left' : 'right');
+    ctx.textBaseline = Math.abs(Math.sin(ang)) < 0.15 ? 'middle' : (Math.sin(ang) > 0 ? 'top' : 'bottom');
+    ctx.fillText(labels[i], lx, ly);
+  }
+
+  // data polygon
+  ctx.beginPath();
+  for(let i=0;i<=n;i++){
+    const idx = i % n;
+    const ang = startAngle + idx*angleStep;
+    const r = radius * (values[idx]/maxVal);
+    const x = cx + r*Math.cos(ang);
+    const y = cy + r*Math.sin(ang);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = (opts.fill || 'rgba(201,209,217,0.15)');
+  ctx.fill();
+  ctx.strokeStyle = opts.stroke || '#c9d1d9';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // points
+  for(let i=0;i<n;i++){
+    const ang = startAngle + i*angleStep;
+    const r = radius * (values[i]/maxVal);
+    const x = cx + r*Math.cos(ang);
+    const y = cy + r*Math.sin(ang);
+    ctx.beginPath();
+    ctx.arc(x,y,3.5,0,Math.PI*2);
+    ctx.fillStyle = colors[i] || '#c9d1d9';
+    ctx.fill();
+  }
+}
+
+function update(){
+  // 16-attribute chart
+  const labels16 = [];
+  const values16 = [];
+  const colors16 = [];
+  Object.values(PROFILES).forEach(prof => {
+    prof.attrs.forEach(a => {
+      labels16.push(a.name);
+      values16.push(state[a.id]);
+      colors16.push(prof.color);
+    });
+  });
+  const avg16 = values16.reduce((a,b) => a+b, 0) / values16.length;
+  drawRadar(document.getElementById('chart16'), labels16, values16, colors16, 5, {margin:75, fontSize:10, avgValue: avg16, avgColor:'#ffffff'});
+
+  // 4-profile synthesis
+  const scores = {};
+  Object.entries(PROFILES).forEach(([key, prof]) => {
+    const sum = prof.attrs.reduce((acc,a) => acc + state[a.id], 0);
+    scores[key] = sum / prof.attrs.length;
+  });
+  const labels4 = Object.values(PROFILES).map(p => p.label);
+  const values4 = Object.keys(PROFILES).map(k => scores[k]);
+  const colors4 = Object.values(PROFILES).map(p => p.color);
+  const avg4 = values4.reduce((a,b) => a+b, 0) / values4.length;
+  drawRadar(document.getElementById('chart4'), labels4, values4, colors4, 5, {margin:90, fontSize:13, fill:'rgba(224,168,63,0.12)', stroke:'#e0a83f', avgValue: avg4, avgColor:'#ffffff'});
+
+  // scores line
+  const scoresLine = document.getElementById('scoresLine');
+  scoresLine.innerHTML = Object.entries(PROFILES).map(([key,prof]) => {
+    return `<span style="color:${prof.color}">${prof.label}: ${scores[key].toFixed(1)}</span>`;
+  }).join('');
+
+  // dominant profile
+  let topKey = Object.keys(scores)[0];
+  Object.keys(scores).forEach(k => { if(scores[k] > scores[topKey]) topKey = k; });
+  const top = PROFILES[topKey];
+
+  // check near-tie for a secondary trait
+  const sorted = Object.entries(scores).sort((a,b) => b[1]-a[1]);
+  let profileText = top.label;
+  if(sorted.length > 1 && (sorted[0][1] - sorted[1][1]) <= 0.4 && sorted[0][1] !== sorted[1][1]){
+    profileText = `${top.label}, com traços fortes de ${PROFILES[sorted[1][0]].label}`;
+  } else if(sorted[0][1] === sorted[1][1]){
+    profileText = `${top.label} / ${PROFILES[sorted[1][0]].label} (perfil combinado)`;
+  }
+
+  document.getElementById('resultProfile').textContent = profileText;
+  document.getElementById('resultStrengths').textContent = top.strengths;
+  document.getElementById('resultWeaknesses').textContent = top.weaknesses;
+}
+
+buildSliders();
+attachListeners();
+update();
+
+document.getElementById('pdfBtn').addEventListener('click', () => {
+  window.print();
+});
+</script>
+</body>
+</html>

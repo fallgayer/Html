@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Consumo de Energia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0C10;
+    --panel:#12151B;
+    --panel2:#161A21;
+    --border:#23272F;
+    --text:#E8EAED;
+    --dim:#8A93A3;
+    --accent:#FFC24B;
+    --accent-dim:#8A6A2A;
+    --accent2:#35E0C4;
+    --danger:#FF5D5D;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    padding:24px 16px 64px;
+  }
+  h1,h2{
+    font-family:'Space Grotesk', sans-serif;
+    margin:0;
+  }
+  .wrap{max-width:1100px;margin:0 auto;}
+
+  header{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:6px;
+  }
+  header .bolt{color:var(--accent);font-size:22px;}
+  header h1{font-size:22px;font-weight:600;letter-spacing:.2px;}
+  .subtitle{color:var(--dim);font-size:13px;margin-bottom:22px;}
+
+  .price-panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .price-panel label{
+    font-size:12px;
+    color:var(--dim);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .price-panel input{
+    width:110px;
+  }
+  .price-panel .hint{font-size:11px;color:var(--dim);}
+
+  input, select{
+    background:var(--panel2);
+    border:1px solid var(--border);
+    color:var(--text);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    padding:8px 9px;
+    border-radius:6px;
+    outline:none;
+  }
+  input:focus, select:focus{border-color:var(--accent);}
+  input[type=number]{width:100%;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    overflow:hidden;
+  }
+  thead th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--dim);
+    font-weight:500;
+    padding:12px 10px;
+    border-bottom:1px solid var(--border);
+    background:var(--panel2);
+  }
+  tbody td{
+    padding:10px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+    font-size:13px;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  .custom-name{margin-top:6px;width:100%;}
+  .readonly{
+    color:var(--accent2);
+    font-weight:600;
+  }
+  .result-cell{
+    color:var(--accent);
+    font-weight:600;
+    font-size:14px;
+  }
+  .rm-btn{
+    background:none;
+    border:1px solid var(--border);
+    color:var(--danger);
+    border-radius:6px;
+    padding:6px 10px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .rm-btn:hover{border-color:var(--danger);}
+
+  .add-row{
+    margin-top:14px;
+    background:transparent;
+    border:1px dashed var(--border);
+    color:var(--dim);
+    padding:10px 16px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+  }
+  .add-row:hover{border-color:var(--accent);color:var(--accent);}
+
+  .totals{
+    margin-top:28px;
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .total-card{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:18px 20px;
+    flex:1;
+    min-width:220px;
+  }
+  .total-card .label{font-size:11px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;}
+  .total-card .value{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:700;color:var(--accent);margin-top:6px;}
+  .power-bar{
+    margin-top:12px;
+    height:5px;
+    width:100%;
+    background:var(--panel2);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .power-bar-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--accent-dim),var(--accent));
+    transition:width .4s ease;
+  }
+
+  .chart-section{margin-top:32px;}
+  .chart-section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .chart-section h2{font-size:15px;color:var(--dim);font-weight:500;text-transform:uppercase;letter-spacing:.06em;margin:0;}
+  .chart-box{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:22px;
+  }
+  .chart-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .chart-row:last-child{margin-bottom:0;}
+  .chart-label{
+    width:150px;
+    flex-shrink:0;
+    font-size:12px;
+    color:var(--text);
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .chart-track{
+    flex:1;
+    background:var(--panel2);
+    border-radius:4px;
+    height:20px;
+    overflow:hidden;
+  }
+  .chart-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent-dim),var(--accent));
+    border-radius:4px;
+    min-width:3px;
+    transition:width .35s ease;
+  }
+  .chart-value{
+    width:82px;
+    flex-shrink:0;
+    text-align:right;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--accent);
+  }
+  .empty-note{color:var(--dim);font-size:12px;}
+
+  .pdf-btn{
+    background:transparent;
+    border:1px solid var(--accent2);
+    color:var(--accent2);
+    padding:8px 14px;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+  }
+  .pdf-btn:hover{background:var(--accent2);color:#0A0C10;}
+
+  @media print{
+    body{background:#fff;color:#111;padding:0;}
+    .add-row, .rm-btn, .pdf-btn{display:none !important;}
+    .price-panel, table, .total-card, .chart-box{
+      background:#fff;
+      border-color:#ccc;
+      box-shadow:none;
+    }
+    .power-bar-fill, .chart-fill{background:#666 !important;}
+    thead th{background:#f2f2f2;color:#333;}
+    input, select{background:#fff;color:#111;border-color:#ccc;}
+    .readonly, .result-cell, .chart-value, .total-card .value{color:#111 !important;}
+    header .bolt{color:#111;}
+    .chart-label{color:#111;}
+  }
+  @media print and (max-width:820px){
+    table, thead, tbody, tr, th, td{display:block;}
+  }
+
+  @media(max-width:820px){
+    table, thead, tbody, tr, th, td{display:block;}
+    thead{display:none;}
+    tbody tr{
+      border:1px solid var(--border);
+      border-radius:8px;
+      margin:10px;
+      padding:10px;
+    }
+    tbody td{
+      border:none;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:6px 2px;
+    }
+    tbody td::before{
+      content:attr(data-label);
+      font-size:10px;
+      text-transform:uppercase;
+      color:var(--dim);
+      letter-spacing:.06em;
+      flex-shrink:0;
+    }
+    tbody td input, tbody td select{width:60%;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="bolt">⚡</span>
+    <h1>Calculadora de Consumo de Energia</h1>
+  </header>
+  <div class="subtitle">Adicione os aparelhos usados, o tempo de uso e veja o custo estimado em reais.</div>
+
+  <div class="price-panel">
+    <div>
+      <label for="precoKwh">Preço do kWh (R$)</label><br>
+      <input type="number" id="precoKwh" value="0.95" step="0.01" min="0">
+    </div>
+    <div class="hint">Confira esse valor na sua última conta de luz.</div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%">Aparelho</th>
+        <th style="width:8%">Tensão</th>
+        <th style="width:10%">Potência (W)</th>
+        <th style="width:12%">Valor / min (R$)</th>
+        <th style="width:12%">Tempo de uso (min)</th>
+        <th style="width:12%">Frequência</th>
+        <th style="width:16%">Resultado (R$/mês)</th>
+        <th style="width:6%"></th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <button class="add-row" id="addRowBtn">+ adicionar aparelho</button>
+
+  <div class="totals">
+    <div class="total-card">
+      <div class="label">Custo total estimado (mês)</div>
+      <div class="value" id="totalCusto">R$ 0,00</div>
+      <div class="power-bar"><div class="power-bar-fill" id="powerBarFill"></div></div>
+    </div>
+    <div class="total-card">
+      <div class="label">Consumo total (mês)</div>
+      <div class="value" id="totalKwh">0,000 kWh</div>
+    </div>
+    <div class="total-card">
+      <div class="label">Gasto médio por dia</div>
+      <div class="value" id="totalDia">R$ 0,00</div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="chart-section-head">
+      <h2>Ranking — os 8 maiores consumos (R$/mês)</h2>
+      <button class="pdf-btn" id="pdfBtn">📄 gerar PDF</button>
+    </div>
+    <div class="chart-box">
+      <div id="chart"></div>
+      <div class="empty-note" id="chartEmptyNote"></div>
+    </div>
+  </div>
+
+</div>
+
+<datalist id="aparelhosList"></datalist>
+
+<script>
+const APARELHOS = {
+  "Chuveiro elétrico": 5500,
+  "Ar condicionado": 1200,
+  "Geladeira": 150,
+  "Freezer": 200,
+  "Micro-ondas": 1200,
+  "Ferro de passar": 1200,
+  "Máquina de lavar roupa": 500,
+  "Secadora de roupas": 2500,
+  "TV LED": 100,
+  "Notebook": 65,
+  "Computador desktop": 200,
+  "Ventilador": 100,
+  "Liquidificador": 300,
+  "Cafeteira elétrica": 800,
+  "Torradeira": 800,
+  "Aspirador de pó": 1400,
+  "Lâmpada LED": 10,
+  "Carregador de celular": 5,
+  "Forno elétrico": 1500,
+  "Ar-condicionado split (9000 BTU)": 900,
+};
+const OUTRO = "Outro (digitar)";
+
+let rowCount = 0;
+
+function buildDatalist(){
+  const dl = document.getElementById('aparelhosList');
+  dl.innerHTML = Object.keys(APARELHOS).map(n => `<option value="${n}">`).join('');
+}
+
+function addRow(prefill){
+  rowCount++;
+  const id = rowCount;
+  const tbody = document.getElementById('rows');
+  const tr = document.createElement('tr');
+  tr.dataset.id = id;
+
+  const options = Object.keys(APARELHOS)
+    .map(n => `<option value="${n}">${n}</option>`).join('');
+
+  tr.innerHTML = `
+    <td data-label="Aparelho">
+      <div style="width:100%">
+        <select class="sel-aparelho">
+          <option value="">selecione...</option>
+          ${options}
+          <option value="${OUTRO}">${OUTRO}</option>
+        </select>
+        <input type="text" class="custom-name" placeholder="nome do aparelho" style="display:none">
+      </div>
+    </td>
+    <td data-label="Tensão">
+      <select class="sel-tensao">
+        <option value="110">110V</option>
+        <option value="220">220V</option>
+      </select>
+    </td>
+    <td data-label="Potência (W)"><input type="number" class="inp-potencia" min="0" step="1" value="0"></td>
+    <td data-label="Valor / min (R$)"><span class="readonly valor-min">R$ 0,0000</span></td>
+    <td data-label="Tempo de uso (min)"><input type="number" class="inp-minutos" min="0" step="1" value="0"></td>
+    <td data-label="Frequência">
+      <select class="sel-freq">
+        <option value="30">Por dia</option>
+        <option value="4">Por semana</option>
+        <option value="1">Por mês</option>
+      </select>
+    </td>
+    <td data-label="Resultado (R$/mês)"><span class="result-cell resultado">R$ 0,00</span></td>
+    <td><button class="rm-btn" title="remover">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  const selAparelho = tr.querySelector('.sel-aparelho');
+  const customName = tr.querySelector('.custom-name');
+  const inpPotencia = tr.querySelector('.inp-potencia');
+  const inpMinutos = tr.querySelector('.inp-minutos');
+  const selFreq = tr.querySelector('.sel-freq');
+
+  selAparelho.addEventListener('change', () => {
+    if(selAparelho.value === OUTRO){
+      customName.style.display = 'block';
+      customName.focus();
+      inpPotencia.value = 0;
+    } else {
+      customName.style.display = 'none';
+      customName.value = '';
+      if(APARELHOS[selAparelho.value] !== undefined){
+        inpPotencia.value = APARELHOS[selAparelho.value];
+      }
+    }
+    recalcAll();
+  });
+
+  [inpPotencia, inpMinutos].forEach(el => el.addEventListener('input', recalcAll));
+  selFreq.addEventListener('change', recalcAll);
+  customName.addEventListener('input', recalcAll);
+  tr.querySelector('.rm-btn').addEventListener('click', () => { tr.remove(); recalcAll(); });
+
+  if(prefill){
+    selAparelho.value = prefill.name;
+    inpPotencia.value = prefill.watt;
+    inpMinutos.value = prefill.min;
+    if(prefill.freq) selFreq.value = prefill.freq;
+  }
+  recalcAll();
+}
+
+function getRowName(tr){
+  const sel = tr.querySelector('.sel-aparelho').value;
+  if(sel === OUTRO){
+    const custom = tr.querySelector('.custom-name').value.trim();
+    return custom || 'Aparelho sem nome';
+  }
+  return sel || 'Aparelho sem nome';
+}
+
+function recalcAll(){
+  const precoKwh = parseFloat(document.getElementById('precoKwh').value) || 0;
+  const rows = [...document.querySelectorAll('#rows tr')];
+
+  let totalCusto = 0, totalKwh = 0;
+  const items = [];
+
+  rows.forEach(tr => {
+    const potencia = parseFloat(tr.querySelector('.inp-potencia').value) || 0;
+    const minutos = parseFloat(tr.querySelector('.inp-minutos').value) || 0;
+    const freqMult = parseFloat(tr.querySelector('.sel-freq').value) || 1; // ocorrências por mês
+
+    const valorPorMinuto = (potencia / 1000) * precoKwh / 60; // R$/min, por uso
+    const resultado = valorPorMinuto * minutos * freqMult; // R$/mês
+
+    tr.querySelector('.valor-min').textContent = 'R$ ' + valorPorMinuto.toFixed(4);
+    tr.querySelector('.resultado').textContent = 'R$ ' + resultado.toFixed(2);
+
+    totalCusto += resultado;
+    totalKwh += (potencia / 1000) * (minutos / 60) * freqMult;
+
+    items.push({ name: getRowName(tr), value: resultado });
+  });
+
+  const gastoDiario = totalCusto / 30;
+
+  document.getElementById('totalCusto').textContent =
+    'R$ ' + totalCusto.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('totalKwh').textContent =
+    totalKwh.toLocaleString('pt-BR', {minimumFractionDigits:3, maximumFractionDigits:3}) + ' kWh';
+  document.getElementById('totalDia').textContent =
+    'R$ ' + gastoDiario.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+  const barPct = Math.min(100, (totalCusto / 200) * 100); // referência visual até R$200
+  document.getElementById('powerBarFill').style.width = barPct + '%';
+
+  updateChart(items);
+}
+
+function updateChart(items){
+  const top8 = items
+    .filter(i => i.value > 0)
+    .sort((a,b) => b.value - a.value)
+    .slice(0, 8);
+
+  const chartEl = document.getElementById('chart');
+  const emptyNote = document.getElementById('chartEmptyNote');
+
+  if(top8.length === 0){
+    chartEl.innerHTML = '';
+    emptyNote.textContent = 'Adicione aparelhos com tempo de uso e frequência para ver o ranking.';
+    return;
+  }
+  emptyNote.textContent = '';
+
+  const max = top8[0].value;
+
+  chartEl.innerHTML = top8.map(item => {
+    const pct = max > 0 ? Math.max((item.value / max) * 100, 2) : 0;
+    const safeName = item.name.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `
+      <div class="chart-row">
+        <span class="chart-label" title="${safeName}">${safeName}</span>
+        <div class="chart-track"><div class="chart-fill" style="width:${pct}%"></div></div>
+        <span class="chart-value">R$ ${item.value.toFixed(2)}</span>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('precoKwh').addEventListener('input', recalcAll);
+document.getElementById('addRowBtn').addEventListener('click', () => addRow());
+document.getElementById('pdfBtn').addEventListener('click', () => window.print());
+
+buildDatalist();
+// linhas iniciais de exemplo
+addRow({ name: 'Chuveiro elétrico', watt: 5500, min: 15, freq: '30' });
+addRow({ name: 'Geladeira', watt: 150, min: 1440, freq: '30' });
+addRow({ name: 'TV LED', watt: 100, min: 180, freq: '30' });
+</script>
+</body>
+</html>
