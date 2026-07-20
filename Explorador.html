@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador Interativo - CSV e Excel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        /* ===== MESMO CSS DA VERSÃO ANTERIOR ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #f0f4f8;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text2: #64748b;
+            --border: #e9edf2;
+            --shadow: 0 20px 60px rgba(0,0,0,0.08);
+            --hover: #f1f5f9;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+        .dark {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --text2: #94a3b8;
+            --border: #334155;
+            --shadow: 0 20px 60px rgba(0,0,0,0.4);
+            --hover: #2d3748;
+            --primary: #60a5fa;
+            --primary-hover: #3b82f6;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+            transition: 0.3s;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 24px;
+            background: var(--card);
+            padding: 20px 28px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            transition: 0.3s;
+        }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header-controls { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 10px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        .btn-success { background: var(--success); }
+        .btn-success:hover { background: #059669; }
+        .btn-warning { background: var(--warning); color: #1e293b; }
+        .btn-warning:hover { background: #d97706; }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--border);
+            color: var(--text);
+        }
+        .btn-outline:hover { background: var(--hover); transform: none; }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: var(--card);
+            transition: 0.3s;
+            cursor: pointer;
+            position: relative;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+        .upload-area:hover { border-color: var(--primary); background: var(--hover); }
+        .upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+        .upload-text { font-weight: 600; font-size: 1.1rem; }
+        .upload-hint { color: var(--text2); font-size: 0.9rem; margin-top: 4px; }
+        .upload-formats {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        .upload-formats .format-badge {
+            background: var(--hover);
+            padding: 2px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text2);
+            border: 1px solid var(--border);
+        }
+        .upload-formats .format-badge.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .file-info {
+            margin-top: 16px;
+            padding: 12px;
+            background: var(--hover);
+            border-radius: 10px;
+            font-weight: 500;
+            display: none;
+        }
+        .file-info.show { display: block; }
+
+        .info-panel {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: none;
+            transition: 0.3s;
+        }
+        .info-panel.show { display: block; }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .info-item .label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text2);
+        }
+        .info-item .value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .info-item .sub {
+            font-size: 0.75rem;
+            color: var(--text2);
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+
+        .sampling-panel {
+            background: var(--hover);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 16px;
+        }
+        .sampling-panel .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sampling-panel .control-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .sampling-panel input[type="number"] {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            width: 100px;
+            font-size: 0.95rem;
+        }
+        .sampling-panel input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .sampling-panel .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #cbd5e1;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+            flex-shrink: 0;
+        }
+        .sampling-panel .toggle.active {
+            background: var(--primary);
+        }
+        .sampling-panel .toggle .slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .sampling-panel .toggle.active .slider {
+            left: 26px;
+        }
+        .sampling-status {
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        .sampling-status.active { background: #d1fae5; color: #065f46; }
+        .sampling-status.inactive { background: #fee2e2; color: #991b1b; }
+
+        .config-panel {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+            display: none;
+            transition: 0.3s;
+        }
+        .config-panel.show { display: block; }
+        
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .config-group label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text2);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .config-group select, .config-group input {
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.95rem;
+            transition: 0.2s;
+            width: 100%;
+        }
+        .config-group select:focus, .config-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .config-group select[multiple] {
+            height: 100px;
+            padding: 6px;
+        }
+        .config-group select[multiple] option:checked {
+            background: var(--primary);
+            color: white;
+        }
+        .config-group .hint {
+            font-size: 0.7rem;
+            color: var(--text2);
+            margin-top: 2px;
+        }
+        .config-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding-top: 16px;
+            border-top: 2px solid var(--border);
+        }
+
+        .dynamic-fields {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            padding: 16px;
+            background: var(--hover);
+            border-radius: 12px;
+            margin: 16px 0;
+        }
+        .dynamic-fields .config-group {
+            background: var(--card);
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-container {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-top: 24px;
+            display: none;
+        }
+        .chart-container.show { display: block; }
+        .chart-container h3 {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .chart-container canvas { max-height: 400px; max-width: 100%; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .stat-card {
+            background: var(--card);
+            padding: 14px 18px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+        .stat-card .label { font-size: 0.65rem; text-transform: uppercase; color: var(--text2); }
+        .stat-card .value { font-size: 1.2rem; font-weight: 700; margin-top: 2px; }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--card);
+            color: var(--text);
+            padding: 14px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border-left: 4px solid var(--primary);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: 0.4s;
+            z-index: 999;
+            max-width: 90vw;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text2);
+        }
+        .no-data span { font-size: 3rem; display: block; margin-bottom: 12px; }
+
+        @media (max-width: 640px) {
+            .container { padding: 0; }
+            .header { padding: 16px; flex-direction: column; align-items: stretch; }
+            .header h1 { font-size: 1.5rem; text-align: center; }
+            .header-controls { justify-content: center; }
+            .config-grid { grid-template-columns: 1fr; }
+            .dynamic-fields { grid-template-columns: 1fr; }
+            .sampling-panel { flex-direction: column; align-items: stretch; }
+            .sampling-panel .control-group { justify-content: center; }
+            .info-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- HEADER -->
+    <div class="header">
+        <h1>🎛️ Explorador Interativo</h1>
+        <div class="header-controls">
+            <button class="btn btn-outline" onclick="toggleTheme()">🌓 Tema</button>
+            <button class="btn btn-outline" onclick="resetAll()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Clique ou arraste seu arquivo</div>
+        <div class="upload-hint">Suporta CSV, Excel (.xlsx, .xls), TSV</div>
+        <div class="upload-formats">
+            <span class="format-badge active">📄 CSV</span>
+            <span class="format-badge active">📊 Excel</span>
+            <span class="format-badge active">📋 TSV</span>
+        </div>
+        <input type="file" id="fileInput" accept=".csv,.xlsx,.xls,.tsv,.txt">
+        <div class="file-info" id="fileInfo"></div>
+    </div>
+
+    <!-- INFO PANEL -->
+    <div class="info-panel" id="infoPanel">
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="label">📊 Total de Registros</div>
+                <div class="value" id="totalRows">0</div>
+                <div class="sub" id="fileFormat">-</div>
+            </div>
+            <div class="info-item">
+                <div class="label">📌 Registros em Uso</div>
+                <div class="value" id="usedRows">0</div>
+                <div class="sub" id="usedRowsSub">100% dos dados</div>
+            </div>
+            <div class="info-item">
+                <div class="label">🏷️ Colunas Categóricas</div>
+                <div class="value" id="catCount">0</div>
+                <div class="sub" id="catList">-</div>
+            </div>
+            <div class="info-item">
+                <div class="label">🔢 Colunas Numéricas</div>
+                <div class="value" id="numCount">0</div>
+                <div class="sub" id="numList">-</div>
+            </div>
+        </div>
+
+        <!-- Painel de Amostragem -->
+        <div class="sampling-panel">
+            <div class="control-group">
+                <label>🎯 Amostragem</label>
+                <div class="toggle" id="samplingToggle" onclick="toggleSampling()">
+                    <div class="slider"></div>
+                </div>
+                <span class="sampling-status inactive" id="samplingStatus">DESLIGADO</span>
+            </div>
+            <div class="control-group">
+                <label>Tamanho:</label>
+                <input type="number" id="sampleSize" value="1000" min="10" max="100000" step="100">
+                <span style="font-size:0.8rem;color:var(--text2);">registros</span>
+            </div>
+            <button class="btn btn-warning" onclick="applySampling()">🔄 Aplicar</button>
+        </div>
+    </div>
+
+    <!-- CONFIGURAÇÕES -->
+    <div class="config-panel" id="configPanel">
+        <div class="config-grid">
+            <div class="config-group">
+                <label>🏷️ Colunas Categóricas</label>
+                <select id="catCols" multiple></select>
+                <div class="hint">Segure Ctrl (ou Cmd) para múltiplas</div>
+            </div>
+            <div class="config-group">
+                <label>🔢 Colunas Numéricas</label>
+                <select id="numCols" multiple></select>
+                <div class="hint">Segure Ctrl (ou Cmd) para múltiplas</div>
+            </div>
+            <div class="config-group">
+                <label>📊 Tipo de Gráfico</label>
+                <select id="chartType"></select>
+                <div class="hint">Escolha a visualização</div>
+            </div>
+        </div>
+
+        <div id="dynamicFields"></div>
+
+        <div class="config-actions">
+            <button class="btn btn-success" onclick="generateChart()">🚀 Gerar Gráfico</button>
+            <button class="btn btn-outline" onclick="showSummary()">📋 Ver Resumo</button>
+            <button class="btn btn-outline" onclick="exportChartImage()">💾 Salvar PNG</button>
+        </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="chart-container" id="chartContainer">
+        <h3>
+            <span id="chartTitle">Gráfico</span>
+            <span>
+                <button class="btn btn-outline" onclick="exportChartImage()" style="font-size:0.8rem;">💾 Baixar</button>
+            </span>
+        </h3>
+        <canvas id="mainChart"></canvas>
+        <div id="chartStats" class="stats-grid"></div>
+    </div>
+
+    <div id="noData" class="no-data">
+        <span>📭</span>
+        <p>Nenhum dado carregado ainda.<br>Envie um CSV ou Excel para começar.</p>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // ============= ESTADO =============
+    let fullData = [];
+    let workingData = [];
+    let header = [];
+    let autoCatCols = [];
+    let autoNumCols = [];
+    let currentChart = null;
+    let isSamplingActive = false;
+    let totalRowsCount = 0;
+    let currentFileName = '';
+
+    // ============= ELEMENTOS =============
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const infoPanel = document.getElementById('infoPanel');
+    const configPanel = document.getElementById('configPanel');
+    const catCols = document.getElementById('catCols');
+    const numCols = document.getElementById('numCols');
+    const chartType = document.getElementById('chartType');
+    const dynamicFields = document.getElementById('dynamicFields');
+    const chartContainer = document.getElementById('chartContainer');
+    const mainChart = document.getElementById('mainChart');
+    const chartTitle = document.getElementById('chartTitle');
+    const chartStats = document.getElementById('chartStats');
+    const noData = document.getElementById('noData');
+    const toast = document.getElementById('toast');
+
+    const totalRows = document.getElementById('totalRows');
+    const usedRows = document.getElementById('usedRows');
+    const usedRowsSub = document.getElementById('usedRowsSub');
+    const catCount = document.getElementById('catCount');
+    const numCount = document.getElementById('numCount');
+    const catList = document.getElementById('catList');
+    const numList = document.getElementById('numList');
+    const fileFormat = document.getElementById('fileFormat');
+    const samplingToggle = document.getElementById('samplingToggle');
+    const samplingStatus = document.getElementById('samplingStatus');
+    const sampleSize = document.getElementById('sampleSize');
+
+    // ============= TIPOS DE GRÁFICO =============
+    const CHART_TYPES = {
+        'bar': {
+            label: '📊 Gráfico de Barras',
+            fields: [
+                { id: 'barX', label: 'Eixo X (Categórico)', type: 'cat' },
+                { id: 'barY', label: 'Eixo Y (Numérico)', type: 'num' },
+                { id: 'barAgg', label: 'Agregação', type: 'select', options: ['média', 'soma', 'contagem', 'máximo', 'mínimo'] }
+            ]
+        },
+        'pie': {
+            label: '🍕 Gráfico de Pizza',
+            fields: [
+                { id: 'pieCat', label: 'Categoria', type: 'cat' }
+            ]
+        },
+        'line': {
+            label: '📈 Gráfico de Linha',
+            fields: [
+                { id: 'lineX', label: 'Eixo X', type: 'any' },
+                { id: 'lineY', label: 'Eixo Y (Numérico)', type: 'num' }
+            ]
+        },
+        'scatter': {
+            label: '🔹 Dispersão + Regressão',
+            fields: [
+                { id: 'scatterX', label: 'Eixo X (Numérico)', type: 'num' },
+                { id: 'scatterY', label: 'Eixo Y (Numérico)', type: 'num' }
+            ]
+        },
+        'histogram': {
+            label: '📊 Histograma',
+            fields: [
+                { id: 'histCol', label: 'Variável Numérica', type: 'num' },
+                { id: 'histBins', label: 'Número de bins', type: 'number', default: 10 }
+            ]
+        },
+        'boxplot': {
+            label: '📦 Boxplot',
+            fields: [
+                { id: 'boxCol', label: 'Variável Numérica', type: 'num' }
+            ]
+        },
+        'groupedBar': {
+            label: '📊 Barras Agrupadas',
+            fields: [
+                { id: 'gbCat1', label: 'Categoria Principal', type: 'cat' },
+                { id: 'gbCat2', label: 'Subcategoria', type: 'cat' },
+                { id: 'gbValue', label: 'Valor Numérico', type: 'num' },
+                { id: 'gbAgg', label: 'Agregação', type: 'select', options: ['média', 'soma', 'contagem'] }
+            ]
+        },
+        'stackedBar': {
+            label: '📊 Barras Empilhadas',
+            fields: [
+                { id: 'sbCat', label: 'Categoria Principal', type: 'cat' },
+                { id: 'sbSub', label: 'Subcategoria (empilhar)', type: 'cat' },
+                { id: 'sbValue', label: 'Valor Numérico', type: 'num' }
+            ]
+        },
+        'radar': {
+            label: '🕸️ Gráfico Radar',
+            fields: [
+                { id: 'radarCat', label: 'Categoria (rótulos)', type: 'cat' },
+                { id: 'radarVals', label: 'Variáveis Numéricas', type: 'num', multiple: true }
+            ]
+        },
+        'doughnut': {
+            label: '🍩 Gráfico Rosca',
+            fields: [
+                { id: 'doughnutCat', label: 'Categoria', type: 'cat' }
+            ]
+        },
+        'polar': {
+            label: '🌊 Gráfico Polar',
+            fields: [
+                { id: 'polarCat', label: 'Categoria', type: 'cat' }
+            ]
+        }
+    };
+
+    // ============= UPLOAD =============
+    fileInput.addEventListener('change', function(e) {
+        const file = this.files[0];
+        if (!file) return;
+        currentFileName = file.name;
+        fileInfo.textContent = `📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+        fileInfo.classList.add('show');
+        
+        const reader = new FileReader();
+        
+        // Detecta formato pela extensão
+        const ext = file.name.split('.').pop().toLowerCase();
+        
+        if (['xlsx', 'xls'].includes(ext)) {
+            // Excel: lê como array buffer
+            reader.onload = function(ev) {
+                try {
+                    const data = new Uint8Array(ev.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                    processData(jsonData, 'Excel');
+                } catch (err) {
+                    alert('Erro ao ler o arquivo Excel: ' + err.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        } else {
+            // CSV, TSV, TXT: lê como texto
+            reader.onload = function(ev) {
+                const text = ev.target.result;
+                const ext = file.name.split('.').pop().toLowerCase();
+                let sep = ',';
+                if (ext === 'tsv' || text.includes('\t')) sep = '\t';
+                else if (text.split('\n')[0].includes(';') && !text.split('\n')[0].includes(',')) sep = ';';
+                
+                const lines = text.split('\n').filter(l => l.trim() !== '');
+                if (lines.length < 2) {
+                    alert('Arquivo precisa ter cabeçalho + dados.');
+                    return;
+                }
+                
+                const headers = lines[0].split(sep).map(h => h.trim().replace(/^"|"$/g, ''));
+                const rows = lines.slice(1).map(line => {
+                    const vals = line.split(sep).map(v => v.trim().replace(/^"|"$/g, ''));
+                    return vals;
+                });
+                
+                const jsonData = rows.map(row => {
+                    const obj = {};
+                    headers.forEach((h, i) => { obj[h] = row[i] || ''; });
+                    return obj;
+                });
+                
+                processData(jsonData, ext.toUpperCase());
+            };
+            reader.readAsText(file);
+        }
+    });
+
+    // Drag and drop
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.style.borderColor = 'var(--primary)'; });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = 'var(--border)'; });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--border)';
+        const file = e.dataTransfer.files[0];
+        if (file) {
+            fileInput.files = e.dataTransfer.files;
+            fileInput.dispatchEvent(new Event('change'));
+        }
+    });
+
+    // ============= PROCESSADOR DE DADOS =============
+    function processData(data, format) {
+        if (!data || data.length === 0) {
+            alert('Nenhum dado encontrado no arquivo.');
+            return;
+        }
+
+        fullData = data;
+        totalRowsCount = fullData.length;
+        header = Object.keys(fullData[0]);
+
+        // Detecta tipos
+        autoCatCols = [];
+        autoNumCols = [];
+        header.forEach(col => {
+            const values = fullData.map(d => d[col]).filter(v => v !== '' && v !== undefined && v !== null);
+            if (values.length === 0) return;
+            const numVals = values.map(v => parseFloat(String(v).replace(',', '.'))).filter(v => !isNaN(v));
+            if (numVals.length === values.length && values.length > 1) {
+                autoNumCols.push(col);
+            } else {
+                autoCatCols.push(col);
+            }
+        });
+
+        if (autoNumCols.length < 1 || autoCatCols.length < 1) {
+            alert('Precisa de pelo menos 1 coluna categórica e 1 numérica.');
+            return;
+        }
+
+        workingData = [...fullData];
+
+        // Mostra o formato do arquivo
+        fileFormat.textContent = `📁 ${format} • ${header.length} colunas`;
+
+        noData.style.display = 'none';
+        infoPanel.classList.add('show');
+        configPanel.classList.add('show');
+        
+        updateInfo();
+        populateConfigs();
+        updateDynamicFields();
+        
+        showToast(`✅ Dados carregados! ${fullData.length} registros de ${format}`);
+    }
+
+    // ============= ATUALIZA INFORMAÇÕES =============
+    function updateInfo() {
+        totalRows.textContent = totalRowsCount.toLocaleString();
+        usedRows.textContent = workingData.length.toLocaleString();
+        
+        const percent = ((workingData.length / totalRowsCount) * 100).toFixed(1);
+        if (workingData.length < totalRowsCount) {
+            usedRowsSub.innerHTML = `⚡ ${percent}% dos dados <span class="badge badge-warning">AMOSTRA</span>`;
+        } else {
+            usedRowsSub.innerHTML = `✅ 100% dos dados <span class="badge badge-success">COMPLETO</span>`;
+        }
+
+        const selectedCat = Array.from(catCols.selectedOptions).map(o => o.value);
+        const selectedNum = Array.from(numCols.selectedOptions).map(o => o.value);
+        
+        catCount.textContent = selectedCat.length;
+        numCount.textContent = selectedNum.length;
+        catList.textContent = selectedCat.join(', ') || '-';
+        numList.textContent = selectedNum.join(', ') || '-';
+    }
+
+    // ============= AMOSTRAGEM =============
+    function toggleSampling() {
+        isSamplingActive = !isSamplingActive;
+        samplingToggle.classList.toggle('active', isSamplingActive);
+        samplingStatus.textContent = isSamplingActive ? 'LIGADO' : 'DESLIGADO';
+        samplingStatus.className = `sampling-status ${isSamplingActive ? 'active' : 'inactive'}`;
+        
+        if (isSamplingActive) {
+            applySampling();
+        } else {
+            workingData = [...fullData];
+            updateInfo();
+            showToast(`🔄 Amostragem desligada. Usando ${workingData.length} registros`);
+            if (document.querySelector('.chart-container.show')) {
+                generateChart();
+            }
+        }
+    }
+
+    function applySampling() {
+        if (!isSamplingActive) {
+            showToast('⚠️ Ative a amostragem primeiro');
+            return;
+        }
+
+        let size = parseInt(sampleSize.value);
+        if (isNaN(size) || size < 1) {
+            showToast('⚠️ Digite um número válido');
+            return;
+        }
+
+        if (size > fullData.length) {
+            size = fullData.length;
+            sampleSize.value = size;
+            showToast(`⚠️ Ajustando para ${size} (máximo)`);
+        }
+
+        const shuffled = [...fullData];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        workingData = shuffled.slice(0, size);
+
+        updateInfo();
+        showToast(`🎯 Amostra de ${workingData.length} registros aplicada!`);
+        
+        if (document.querySelector('.chart-container.show')) {
+            generateChart();
+        }
+    }
+
+    // ============= POPULA CONFIGURAÇÕES =============
+    function populateConfigs() {
+        catCols.innerHTML = '';
+        header.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            if (autoCatCols.includes(col)) opt.selected = true;
+            catCols.appendChild(opt);
+        });
+
+        numCols.innerHTML = '';
+        header.forEach(col => {
+            const opt = document.createElement('option');
+            opt.value = col;
+            opt.textContent = col;
+            if (autoNumCols.includes(col)) opt.selected = true;
+            numCols.appendChild(opt);
+        });
+
+        chartType.innerHTML = '';
+        Object.entries(CHART_TYPES).forEach(([key, value]) => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            opt.textContent = value.label;
+            chartType.appendChild(opt);
+        });
+
+        chartType.addEventListener('change', updateDynamicFields);
+        catCols.addEventListener('change', () => { updateDynamicFields(); updateInfo(); });
+        numCols.addEventListener('change', () => { updateDynamicFields(); updateInfo(); });
+    }
+
+    // ============= CAMPOS DINÂMICOS =============
+    function updateDynamicFields() {
+        const type = chartType.value;
+        const config = CHART_TYPES[type];
+        if (!config) return;
+
+        dynamicFields.innerHTML = '';
+        const container = document.createElement('div');
+        container.className = 'dynamic-fields';
+
+        const selectedCat = Array.from(catCols.selectedOptions).map(o => o.value);
+        const selectedNum = Array.from(numCols.selectedOptions).map(o => o.value);
+        const allCols = [...selectedCat, ...selectedNum];
+
+        config.fields.forEach(field => {
+            const group = document.createElement('div');
+            group.className = 'config-group';
+
+            const label = document.createElement('label');
+            label.textContent = field.label;
+            group.appendChild(label);
+
+            if (field.type === 'select') {
+                const select = document.createElement('select');
+                select.id = field.id;
+                field.options.forEach(opt => {
+                    const option = document.createElement('option');
+                    option.value = opt;
+                    option.textContent = opt.charAt(0).toUpperCase() + opt.slice(1);
+                    select.appendChild(option);
+                });
+                group.appendChild(select);
+            } else if (field.type === 'number') {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = field.id;
+                input.value = field.default || 10;
+                input.min = 2;
+                input.max = 50;
+                group.appendChild(input);
+            } else {
+                const select = document.createElement('select');
+                select.id = field.id;
+                if (field.multiple) select.multiple = true;
+                
+                let options = [];
+                if (field.type === 'any') options = allCols;
+                else if (field.type === 'cat') options = selectedCat;
+                else if (field.type === 'num') options = selectedNum;
+
+                if (options.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = '⚠️ Nenhuma coluna disponível';
+                    select.appendChild(opt);
+                } else {
+                    options.forEach(col => {
+                        const opt = document.createElement('option');
+                        opt.value = col;
+                        opt.textContent = col;
+                        select.appendChild(opt);
+                    });
+                    if (!field.multiple && options.length > 0) {
+                        select.value = options[0];
+                    }
+                }
+                group.appendChild(select);
+            }
+            container.appendChild(group);
+        });
+
+        dynamicFields.appendChild(container);
+    }
+
+    // ============= GERAR GRÁFICO =============
+    function generateChart() {
+        const type = chartType.value;
+        const config = CHART_TYPES[type];
+        if (!config) {
+            showToast('⚠️ Selecione um tipo de gráfico');
+            return;
+        }
+
+        const params = {};
+        config.fields.forEach(field => {
+            const el = document.getElementById(field.id);
+            if (!el) return;
+            if (el.multiple) {
+                params[field.id] = Array.from(el.selectedOptions).map(o => o.value);
+            } else {
+                params[field.id] = el.value;
+            }
+        });
+
+        for (const [key, value] of Object.entries(params)) {
+            if (!value || (Array.isArray(value) && value.length === 0)) {
+                showToast(`⚠️ Preencha: ${config.fields.find(f => f.id === key)?.label}`);
+                return;
+            }
+        }
+
+        if (currentChart) {
+            currentChart.destroy();
+            currentChart = null;
+        }
+
+        chartContainer.classList.add('show');
+        chartTitle.textContent = config.label;
+
+        switch(type) {
+            case 'bar': generateBarChart(params); break;
+            case 'pie': generatePieChart(params); break;
+            case 'line': generateLineChart(params); break;
+            case 'scatter': generateScatterChart(params); break;
+            case 'histogram': generateHistogram(params); break;
+            case 'boxplot': generateBoxplot(params); break;
+            case 'groupedBar': generateGroupedBar(params); break;
+            case 'stackedBar': generateStackedBar(params); break;
+            case 'radar': generateRadar(params); break;
+            case 'doughnut': generateDoughnut(params); break;
+            case 'polar': generatePolar(params); break;
+            default: showToast('⚠️ Tipo não implementado');
+        }
+    }
+
+    // ============= FUNÇÕES AUXILIARES =============
+    function getValues(col) {
+        return workingData.map(d => parseFloat(String(d[col]).replace(',', '.'))).filter(v => !isNaN(v));
+    }
+
+    function getCatValues(col) {
+        return workingData.map(d => String(d[col])).filter(v => v !== '' && v !== 'undefined' && v !== 'null');
+    }
+
+    // ============= IMPLEMENTAÇÕES DOS GRÁFICOS =============
+    // (As funções são as mesmas da versão anterior - mantidas por questões de espaço)
+    // [Todas as funções de gráfico permanecem idênticas à versão anterior]
+    // Para não repetir 500 linhas, mantive a estrutura, mas as funções estão completas no código
+
+    function generateBarChart(params) {
+        const xCol = params.barX;
+        const yCol = params.barY;
+        const agg = params.barAgg || 'média';
+
+        const cats = [...new Set(getCatValues(xCol))];
+        const data = cats.map(cat => {
+            const filtered = workingData.filter(d => String(d[xCol]) === cat);
+            const vals = filtered.map(d => parseFloat(String(d[yCol]).replace(',', '.'))).filter(v => !isNaN(v));
+            if (agg === 'média') return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+            if (agg === 'soma') return vals.reduce((a,b) => a+b, 0);
+            if (agg === 'contagem') return vals.length;
+            if (agg === 'máximo') return vals.length ? Math.max(...vals) : 0;
+            if (agg === 'mínimo') return vals.length ? Math.min(...vals) : 0;
+            return 0;
+        });
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: cats,
+                datasets: [{
+                    label: `${agg} de ${yCol}`,
+                    data: data,
+                    backgroundColor: 'rgba(59,130,246,0.7)',
+                    borderColor: '#3b82f6',
+                    borderWidth: 2,
+                    borderRadius: 6,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        showStats({ [yCol]: getValues(yCol) });
+        showToast(`✅ Gráfico de barras gerado!`);
+    }
+
+    function generatePieChart(params) {
+        const cat = params.pieCat;
+        const counts = {};
+        getCatValues(cat).forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+
+        const ctx = mainChart.getContext('2d');
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1','#14b8a6'];
+        currentChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: colors.slice(0, Object.keys(counts).length),
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+        showToast(`🍕 Pizza gerada!`);
+    }
+
+    function generateLineChart(params) {
+        const xCol = params.lineX;
+        const yCol = params.lineY;
+
+        const sorted = [...workingData].sort((a, b) => {
+            const aVal = parseFloat(a[xCol]) || a[xCol];
+            const bVal = parseFloat(b[xCol]) || b[xCol];
+            return aVal > bVal ? 1 : -1;
+        });
+
+        const labels = sorted.map(d => d[xCol]);
+        const data = sorted.map(d => parseFloat(String(d[yCol]).replace(',', '.'))).filter(v => !isNaN(v));
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: yCol,
+                    data: data,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16,185,129,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        showStats({ [yCol]: getValues(yCol) });
+        showToast(`📈 Gráfico de linha gerado!`);
+    }
+
+    function generateScatterChart(params) {
+        const xCol = params.scatterX;
+        const yCol = params.scatterY;
+
+        const data = workingData.map(d => ({
+            x: parseFloat(String(d[xCol]).replace(',', '.')),
+            y: parseFloat(String(d[yCol]).replace(',', '.'))
+        })).filter(d => !isNaN(d.x) && !isNaN(d.y));
+
+        if (data.length < 3) {
+            showToast('⚠️ Poucos dados para dispersão');
+            return;
+        }
+
+        const n = data.length;
+        const sumX = data.reduce((s, d) => s + d.x, 0);
+        const sumY = data.reduce((s, d) => s + d.y, 0);
+        const sumXY = data.reduce((s, d) => s + d.x * d.y, 0);
+        const sumX2 = data.reduce((s, d) => s + d.x * d.x, 0);
+        const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        const intercept = (sumY - slope * sumX) / n;
+
+        const minX = Math.min(...data.map(d => d.x));
+        const maxX = Math.max(...data.map(d => d.x));
+        const regLine = [
+            { x: minX, y: slope * minX + intercept },
+            { x: maxX, y: slope * maxX + intercept }
+        ];
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Dados',
+                        data: data,
+                        backgroundColor: '#8b5cf6',
+                        pointRadius: 4,
+                    },
+                    {
+                        label: `y = ${slope.toFixed(3)}x + ${intercept.toFixed(3)}`,
+                        data: regLine,
+                        type: 'line',
+                        borderColor: '#ef4444',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { title: { display: true, text: xCol } },
+                    y: { title: { display: true, text: yCol } }
+                }
+            }
+        });
+
+        const meanY = sumY / n;
+        const ssTot = data.reduce((s, d) => s + (d.y - meanY)**2, 0);
+        const ssRes = data.reduce((s, d) => s + (d.y - (slope * d.x + intercept))**2, 0);
+        const r2 = ssTot > 0 ? 1 - ssRes / ssTot : 0;
+
+        chartStats.innerHTML = `
+            <div class="stat-card"><div class="label">Regressão</div><div class="value">y = ${slope.toFixed(3)}x + ${intercept.toFixed(3)}</div></div>
+            <div class="stat-card"><div class="label">R²</div><div class="value">${r2.toFixed(4)}</div></div>
+            <div class="stat-card"><div class="label">Pontos</div><div class="value">${n}</div></div>
+        `;
+        showToast(`🔹 Dispersão gerada! R² = ${r2.toFixed(4)}`);
+    }
+
+    function generateHistogram(params) {
+        const col = params.histCol;
+        const bins = parseInt(params.histBins) || 10;
+        const vals = getValues(col);
+        if (vals.length < 2) return;
+
+        const min = Math.min(...vals);
+        const max = Math.max(...vals);
+        const binWidth = (max - min) / bins;
+        const histogram = {};
+        
+        for (let i = 0; i < bins; i++) {
+            const lower = min + i * binWidth;
+            const upper = lower + binWidth;
+            const key = `${lower.toFixed(2)}-${upper.toFixed(2)}`;
+            histogram[key] = vals.filter(v => v >= lower && v < upper).length;
+        }
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(histogram),
+                datasets: [{
+                    label: 'Frequência',
+                    data: Object.values(histogram),
+                    backgroundColor: 'rgba(16,185,129,0.7)',
+                    borderColor: '#10b981',
+                    borderWidth: 1.5,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Frequência' } },
+                    x: { title: { display: true, text: col } }
+                }
+            }
+        });
+        showStats({ [col]: vals });
+        showToast(`📊 Histograma gerado!`);
+    }
+
+    function generateBoxplot(params) {
+        const col = params.boxCol;
+        const vals = getValues(col);
+        if (vals.length < 5) {
+            showToast('⚠️ Poucos dados para boxplot (mínimo 5)');
+            return;
+        }
+
+        const sorted = [...vals].sort((a,b) => a-b);
+        const q1 = sorted[Math.floor(sorted.length * 0.25)];
+        const q2 = sorted[Math.floor(sorted.length * 0.5)];
+        const q3 = sorted[Math.floor(sorted.length * 0.75)];
+        const iqr = q3 - q1;
+        const lower = Math.max(sorted[0], q1 - 1.5 * iqr);
+        const upper = Math.min(sorted[sorted.length-1], q3 + 1.5 * iqr);
+        const outliers = vals.filter(v => v < lower || v > upper);
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Min-Max',
+                        data: [{ x: 1, y: lower }, { x: 1, y: upper }],
+                        type: 'line',
+                        borderColor: '#3b82f6',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        showLine: true,
+                    },
+                    {
+                        label: 'Q1-Q3',
+                        data: [{ x: 1, y: q1 }, { x: 1, y: q3 }],
+                        type: 'line',
+                        borderColor: '#8b5cf6',
+                        borderWidth: 5,
+                        pointRadius: 0,
+                        showLine: true,
+                    },
+                    {
+                        label: `Mediana: ${q2.toFixed(2)}`,
+                        data: [{ x: 1, y: q2 }],
+                        backgroundColor: '#ef4444',
+                        pointRadius: 10,
+                        pointStyle: 'line',
+                    },
+                    {
+                        label: `Outliers (${outliers.length})`,
+                        data: outliers.map(v => ({ x: 1, y: v })),
+                        backgroundColor: '#ef4444',
+                        pointRadius: 6,
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { display: false },
+                    y: { title: { display: true, text: col } }
+                }
+            }
+        });
+
+        chartStats.innerHTML = `
+            <div class="stat-card"><div class="label">Mediana</div><div class="value">${q2.toFixed(2)}</div></div>
+            <div class="stat-card"><div class="label">Q1 - Q3</div><div class="value">${q1.toFixed(2)} - ${q3.toFixed(2)}</div></div>
+            <div class="stat-card"><div class="label">Outliers</div><div class="value">${outliers.length}</div></div>
+        `;
+        showToast(`📦 Boxplot gerado!`);
+    }
+
+    function generateGroupedBar(params) {
+        const cat1 = params.gbCat1;
+        const cat2 = params.gbCat2;
+        const value = params.gbValue;
+        const agg = params.gbAgg || 'média';
+
+        const cats1 = [...new Set(getCatValues(cat1))];
+        const cats2 = [...new Set(getCatValues(cat2))];
+        
+        const data = cats1.map(c1 => {
+            return cats2.map(c2 => {
+                const filtered = workingData.filter(d => String(d[cat1]) === c1 && String(d[cat2]) === c2);
+                const vals = filtered.map(d => parseFloat(String(d[value]).replace(',', '.'))).filter(v => !isNaN(v));
+                if (agg === 'média') return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+                if (agg === 'soma') return vals.reduce((a,b) => a+b, 0);
+                return vals.length;
+            });
+        });
+
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444'];
+        const datasets = cats2.map((c2, i) => ({
+            label: c2,
+            data: data.map(row => row[i]),
+            backgroundColor: colors[i % colors.length],
+            borderRadius: 4,
+        }));
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: cats1,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+        showToast(`📊 Barras agrupadas geradas!`);
+    }
+
+    function generateStackedBar(params) {
+        const cat = params.sbCat;
+        const sub = params.sbSub;
+        const value = params.sbValue;
+
+        const cats = [...new Set(getCatValues(cat))];
+        const subs = [...new Set(getCatValues(sub))];
+        
+        const data = subs.map(subItem => {
+            return cats.map(catItem => {
+                const filtered = workingData.filter(d => String(d[cat]) === catItem && String(d[sub]) === subItem);
+                const vals = filtered.map(d => parseFloat(String(d[value]).replace(',', '.'))).filter(v => !isNaN(v));
+                return vals.length ? vals.reduce((a,b) => a+b, 0) : 0;
+            });
+        });
+
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1'];
+        const datasets = subs.map((s, i) => ({
+            label: s,
+            data: data[i],
+            backgroundColor: colors[i % colors.length],
+            borderRadius: 2,
+        }));
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: cats,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { stacked: true },
+                    y: { stacked: true, beginAtZero: true }
+                }
+            }
+        });
+        showToast(`📊 Barras empilhadas geradas!`);
+    }
+
+    function generateRadar(params) {
+        const cat = params.radarCat;
+        const numVals = params.radarVals || [];
+        if (numVals.length < 2) {
+            showToast('⚠️ Selecione pelo menos 2 variáveis numéricas');
+            return;
+        }
+
+        const cats = [...new Set(getCatValues(cat))];
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444'];
+        const datasets = numVals.map((num, i) => {
+            const data = cats.map(c => {
+                const filtered = workingData.filter(d => String(d[cat]) === c);
+                const vals = filtered.map(d => parseFloat(String(d[num]).replace(',', '.'))).filter(v => !isNaN(v));
+                return vals.length ? vals.reduce((a,b) => a+b, 0) / vals.length : 0;
+            });
+            return {
+                label: num,
+                data: data,
+                backgroundColor: colors[i % colors.length] + '33',
+                borderColor: colors[i % colors.length],
+                pointBackgroundColor: colors[i % colors.length],
+                borderWidth: 2,
+            };
+        });
+
+        const ctx = mainChart.getContext('2d');
+        currentChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: cats,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: { r: { beginAtZero: true } }
+            }
+        });
+        showToast(`🕸️ Radar gerado!`);
+    }
+
+    function generateDoughnut(params) {
+        const cat = params.doughnutCat;
+        const counts = {};
+        getCatValues(cat).forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+
+        const ctx = mainChart.getContext('2d');
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1'];
+        currentChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: colors.slice(0, Object.keys(counts).length),
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+        showToast(`🍩 Rosca gerada!`);
+    }
+
+    function generatePolar(params) {
+        const cat = params.polarCat;
+        const counts = {};
+        getCatValues(cat).forEach(v => { counts[v] = (counts[v] || 0) + 1; });
+
+        const ctx = mainChart.getContext('2d');
+        const colors = ['#3b82f6','#8b5cf6','#ec4899','#f59e0b','#10b981','#ef4444','#6366f1'];
+        currentChart = new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: Object.keys(counts),
+                datasets: [{
+                    data: Object.values(counts),
+                    backgroundColor: colors.slice(0, Object.keys(counts).length),
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+        showToast(`🌊 Polar gerado!`);
+    }
+
+    // ============= ESTATÍSTICAS =============
+    function showStats(data) {
+        chartStats.innerHTML = '';
+        Object.entries(data).forEach(([key, vals]) => {
+            if (!vals || vals.length === 0) return;
+            const mean = vals.reduce((a,b) => a+b, 0) / vals.length;
+            const min = Math.min(...vals);
+            const max = Math.max(...vals);
+            const card = document.createElement('div');
+            card.className = 'stat-card';
+            card.innerHTML = `
+                <div class="label">${key}</div>
+                <div class="value">${mean.toFixed(2)}</div>
+                <div class="sub">min: ${min.toFixed(2)} | max: ${max.toFixed(2)} | n: ${vals.length}</div>
+            `;
+            chartStats.appendChild(card);
+        });
+    }
+
+    // ============= RESUMO =============
+    function showSummary() {
+        const selectedCat = Array.from(catCols.selectedOptions).map(o => o.value);
+        const selectedNum = Array.from(numCols.selectedOptions).map(o => o.value);
+        
+        let msg = '📋 RESUMO DOS DADOS\n\n';
+        msg += `📌 Total: ${fullData.length} registros\n`;
+        msg += `📌 Em uso: ${workingData.length} registros (${((workingData.length/fullData.length)*100).toFixed(1)}%)\n\n`;
+        
+        msg += '🏷️ CATEGÓRICAS:\n';
+        selectedCat.forEach(col => {
+            const vals = getCatValues(col);
+            const unique = [...new Set(vals)];
+            msg += `  ${col}: ${unique.length} categorias (${vals.length} valores)\n`;
+        });
+        
+        msg += '\n🔢 NUMÉRICAS:\n';
+        selectedNum.forEach(col => {
+            const vals = getValues(col);
+            if (vals.length === 0) return;
+            const mean = vals.reduce((a,b) => a+b, 0) / vals.length;
+            const min = Math.min(...vals);
+            const max = Math.max(...vals);
+            msg += `  ${col}: média=${mean.toFixed(2)}, min=${min.toFixed(2)}, max=${max.toFixed(2)}, n=${vals.length}\n`;
+        });
+
+        alert(msg);
+        showToast('📋 Resumo exibido!');
+    }
+
+    // ============= EXPORTAR =============
+    function exportChartImage() {
+        if (!currentChart) {
+            showToast('⚠️ Gere um gráfico primeiro');
+            return;
+        }
+        const link = document.createElement('a');
+        link.download = `grafico_${Date.now()}.png`;
+        link.href = mainChart.toDataURL('image/png');
+        link.click();
+        showToast('💾 Gráfico baixado!');
+    }
+
+    // ============= UTILIDADES =============
+    function toggleTheme() {
+        document.body.classList.toggle('dark');
+        const theme = document.body.classList.contains('dark') ? 'escuro' : 'claro';
+        showToast(`🌓 Tema ${theme}`);
+    }
+
+    function resetAll() {
+        if (currentChart) {
+            currentChart.destroy();
+            currentChart = null;
+        }
+        chartContainer.classList.remove('show');
+        configPanel.classList.remove('show');
+        infoPanel.classList.remove('show');
+        noData.style.display = 'block';
+        fileInfo.classList.remove('show');
+        fileInput.value = '';
+        fullData = [];
+        workingData = [];
+        header = [];
+        isSamplingActive = false;
+        samplingToggle.classList.remove('active');
+        samplingStatus.textContent = 'DESLIGADO';
+        samplingStatus.className = 'sampling-status inactive';
+        showToast('🔄 Tudo resetado');
+    }
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add('show');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+</script>
+</body>
+</html>
