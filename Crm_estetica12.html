@@ -1,0 +1,2507 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estética</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f8e8ee; min-height: 100vh; color: #4a2c3a; padding: 15px; }
+.container { max-width: 1200px; margin: 0 auto; }
+header { text-align: center; margin-bottom: 20px; padding: 15px; }
+header h1 { font-size: 1.8rem; color: #a34a6b; }
+header p { color: #8a6478; margin-top: 5px; font-size: 0.9rem; }
+.tabs { display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center; }
+.tab-btn { background: white; border: 2px solid #f0d9e3; padding: 10px 18px; border-radius: 25px; cursor: pointer; font-weight: 600; color: #a34a6b; font-size: 0.85rem; }
+.tab-btn.active { background: #a34a6b; color: white; border-color: #a34a6b; }
+.card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 8px 25px rgba(163,74,107,0.1); margin-bottom: 15px; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+h2 { color: #a34a6b; margin-bottom: 15px; font-size: 1.3rem; }
+h3 { color: #8a6478; margin: 15px 0 10px; font-size: 1rem; }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group { display: flex; flex-direction: column; }
+label { font-size: 0.8rem; font-weight: 600; color: #8a6478; margin-bottom: 4px; text-transform: uppercase; }
+input, select, textarea { padding: 11px 14px; border: 2px solid #f0d9e3; border-radius: 10px; font-size: 0.95rem; color: #4a2c3a; outline: none; width: 100%; font-family: inherit; }
+input:focus, select:focus, textarea:focus { border-color: #a34a6b; }
+textarea { resize: vertical; min-height: 70px; }
+.btn { background: #a34a6b; color: white; border: none; padding: 11px 22px; border-radius: 22px; cursor: pointer; font-weight: 600; font-size: 0.9rem; margin-right: 8px; margin-top: 8px; }
+.btn:active { background: #8a395a; }
+.btn.danger { background: #c94a5c; }
+.btn.green { background: #7ab88c; }
+.btn.blue { background: #6a8fc7; }
+.btn.gray { background: #8a6478; }
+.btn.yellow { background: #e0a04a; }
+.btn.small { padding: 5px 12px; font-size: 0.75rem; }
+.search-box { width: 100%; padding: 13px 18px; border: 2px solid #f0d9e3; border-radius: 25px; font-size: 1rem; margin-bottom: 15px; }
+.client-list { display: grid; gap: 12px; }
+.client-card { background: #fdf5f8; border-left: 5px solid #a34a6b; padding: 15px; border-radius: 10px; cursor: pointer; }
+.client-card h4 { color: #a34a6b; margin-bottom: 5px; }
+.client-card p { color: #8a6478; font-size: 0.88rem; margin: 2px 0; }
+.history-item, .appointment-item { background: #fdf5f8; border-radius: 10px; padding: 13px; margin-bottom: 8px; border-left: 4px solid #a34a6b; }
+.appointment-item.future { border-left-color: #7ab88c; }
+.appointment-item.past { opacity: 0.75; }
+.appointment-item.atrasado { border-left-color: #c94a5c; background: #ffe8eb; opacity: 1; }
+.appointment-item.clickable { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.appointment-item.clickable:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(163,74,107,0.15); }
+.item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 10px; flex-wrap: wrap; }
+.item-date { font-weight: 700; color: #a34a6b; font-size: 0.9rem; }
+</style>
+
+<style>
+.badge { background: #a34a6b; color: white; padding: 3px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: 600; display: inline-block; margin-top: 3px; }
+.badge.green { background: #7ab88c; }
+.badge.gray { background: #b0a0a8; }
+.badge.blue { background: #6a8fc7; }
+.badge.yellow { background: #e0a04a; }
+.badge.red { background: #c94a5c; }
+.badge.dark { background: #6a4a5a; }
+.empty-msg { text-align: center; color: #b0a0a8; padding: 30px; font-style: italic; }
+.modal-overlay { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(74,44,58,0.5); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+.modal-overlay.active { display: flex; }
+.modal { background: white; border-radius: 18px; padding: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #a34a6b; line-height: 1; padding: 0 8px; }
+.section-box { background: #fdf5f8; border-radius: 10px; padding: 15px; margin-top: 15px; }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+.stat-card { background: #fdf5f8; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #f0d9e3; }
+.stat-card .num { font-size: 1.6rem; font-weight: 700; color: #a34a6b; }
+.stat-card .label { font-size: 0.7rem; color: #8a6478; text-transform: uppercase; }
+.filter-bar { display: flex; gap: 6px; margin-bottom: 15px; flex-wrap: wrap; }
+.filter-btn { background: white; border: 2px solid #f0d9e3; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-weight: 600; color: #a34a6b; font-size: 0.8rem; }
+.filter-btn.active { background: #a34a6b; color: white; border-color: #a34a6b; }
+.alert-box { background: #fff4e0; border-left: 4px solid #e0a04a; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9rem; }
+.alert-box strong { color: #b87830; }
+.alert-box.clickable { cursor: pointer; }
+.aniv-actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.backup-info { font-size: 0.85rem; color: #8a6478; margin-top: 10px; line-height: 1.5; }
+.fin-filtros { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+.fin-tabela { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+.fin-tabela th { background: #fdf5f8; padding: 8px; text-align: left; font-size: 0.7rem; text-transform: uppercase; color: #8a6478; border-bottom: 2px solid #f0d9e3; }
+.fin-tabela td { padding: 8px; border-bottom: 1px solid #f0d9e3; }
+.fin-tabela td:last-child, .fin-tabela th:last-child { text-align: right; font-weight: 700; color: #a34a6b; }
+.fin-total { background: linear-gradient(135deg, #a34a6b, #8a395a); color: white; padding: 20px; border-radius: 15px; text-align: center; margin-bottom: 15px; }
+.fin-total.clicavel { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.fin-total.clicavel:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(163,74,107,0.3); }
+.fin-total .valor { font-size: 2.2rem; font-weight: 700; }
+.fin-total .info { font-size: 0.85rem; opacity: 0.9; margin-top: 5px; }
+.fin-total .clique { font-size: 0.75rem; opacity: 0.8; margin-top: 8px; text-decoration: underline; }
+.fin-total.pendente { background: linear-gradient(135deg, #e0a04a, #c8842a); }
+.fin-total.receber { background: linear-gradient(135deg, #7ab88c, #5a9a6e); }
+.fin-total.atrasado { background: linear-gradient(135deg, #c94a5c, #a83a4a); }
+.fin-cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+.fin-mini-card { background: #fdf5f8; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #f0d9e3; }
+.fin-mini-card .n { font-size: 1.3rem; font-weight: 700; color: #a34a6b; }
+.fin-mini-card .l { font-size: 0.7rem; color: #8a6478; text-transform: uppercase; }
+.hoje-badge { background: #ffd700; color: #6a4a00; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; margin-left: 5px; }
+.massa-item { display: flex; align-items: center; gap: 10px; background: #fdf5f8; padding: 12px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; user-select: none; }
+.massa-item:active { background: #f0e0e8; }
+.massa-item input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; flex-shrink: 0; pointer-events: auto; }
+.massa-item .info { flex: 1; pointer-events: none; }
+.massa-item .info strong { color: #a34a6b; display: block; font-size: 0.95rem; }
+.massa-item .info span { color: #8a6478; font-size: 0.8rem; }
+.massa-item.disabled { opacity: 0.5; cursor: not-allowed; }
+.msg-card { background: #fdf5f8; border-radius: 10px; padding: 15px; margin-bottom: 10px; border-left: 4px solid #a34a6b; }
+.msg-card h4 { color: #a34a6b; margin-bottom: 8px; }
+.msg-card .txt { font-size: 0.88rem; color: #6a4a5a; white-space: pre-wrap; background: white; padding: 10px; border-radius: 8px; margin: 8px 0; }
+.massa-status { background: #fdf5f8; padding: 15px; border-radius: 10px; margin-top: 15px; }
+.massa-status .linha { padding: 6px 0; border-bottom: 1px solid #f0d9e3; font-size: 0.9rem; display: flex; justify-content: space-between; }
+.lista-pendentes-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #e0a04a; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lista-pendentes-item .info { flex: 1; min-width: 150px; }
+.lista-pendentes-item .info strong { color: #a34a6b; display: block; font-size: 0.9rem; }
+.lista-pendentes-item .info small { color: #8a6478; font-size: 0.8rem; }
+.diag-item { background: white; padding: 10px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #6a8fc7; font-size: 0.85rem; }
+.diag-item strong { color: #a34a6b; }
+.proc-card { background: #fdf5f8; border-radius: 10px; padding: 13px; margin-bottom: 8px; border-left: 4px solid #a34a6b; }
+.proc-card.inativo { opacity: 0.55; border-left-color: #b0a0a8; }
+.proc-card .info strong { color: #a34a6b; font-size: 0.95rem; display: block; }
+.proc-card .info small { color: #8a6478; font-size: 0.8rem; }
+.legend-box { background: #f0f4f8; border-left: 4px solid #6a8fc7; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 0.85rem; color: #4a3a5a; line-height: 1.7; }
+.legend-box code { background: #fff; padding: 2px 6px; border-radius: 4px; color: #a34a6b; font-weight: 600; }
+.retorno-item { background: white; padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid #7ab88c; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.retorno-item.atrasado { border-left-color: #c94a5c; background: #fff4f5; }
+.retorno-item .info { flex: 1; min-width: 150px; }
+.retorno-item .info strong { color: #a34a6b; display: block; font-size: 0.9rem; }
+.retorno-item .info small { color: #8a6478; font-size: 0.8rem; display: block; margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>✿ Estética ✿</h1>
+<p>Gerencie clientes, histórico e agendamentos</p>
+</header>
+
+<div class="tabs">
+<button class="tab-btn active" id="btn-dashboard" type="button">📊 Dashboard</button>
+<button class="tab-btn" id="btn-clientes" type="button">👥 Clientes</button>
+<button class="tab-btn" id="btn-agenda" type="button">📅 Agenda</button>
+<button class="tab-btn" id="btn-procedimentos" type="button">💅 Procedimentos</button>
+<button class="tab-btn" id="btn-aniversarios" type="button">🎂 Aniversários</button>
+<button class="tab-btn" id="btn-financeiro" type="button">💰 Financeiro</button>
+<button class="tab-btn" id="btn-mensagens" type="button">📱 Mensagens</button>
+<button class="tab-btn" id="btn-backup" type="button">💾 Backup</button>
+</div>
+
+<div id="tab-dashboard" class="tab-content active">
+<div class="card">
+<h2>Visão Geral</h2>
+<div id="alertas-retornos"></div>
+<div id="alertas-atrasados"></div>
+<div id="alertas-hoje"></div>
+<div id="alertas-aniv"></div>
+<div class="stats" id="stats-container"></div>
+<h3>💰 Faturamento deste mês</h3>
+<div id="faturamento-mes"></div>
+<h3>Próximos Agendamentos <small style="font-size:0.7rem;color:#8a6478;text-transform:none;">(toque para editar)</small></h3>
+<div id="proximos-agendamentos"></div>
+</div>
+</div>
+
+
+<div id="tab-clientes" class="tab-content">
+<div class="card">
+<h2>Nova Cliente</h2>
+<div class="form-grid">
+<div class="form-group"><label>Nome *</label><input type="text" id="cli-nome" placeholder="Nome completo"></div>
+<div class="form-group"><label>Celular</label><input type="tel" id="cli-celular" placeholder="(00) 00000-0000"></div>
+<div class="form-group"><label>Aniversário</label><input type="date" id="cli-aniversario"></div>
+</div>
+<div class="form-group"><label>Observações gerais</label><textarea id="cli-obs" placeholder="Alergias, preferências, histórico médico..." style="min-height:100px;"></textarea></div>
+<button class="btn" id="btn-salvar-cliente" type="button">+ Cadastrar Cliente</button>
+</div>
+<div class="card">
+<h2>Clientes Cadastradas</h2>
+<input type="text" class="search-box" id="busca-cliente" placeholder="🔍 Buscar por nome ou celular...">
+<div class="client-list" id="clientes-lista"></div>
+</div>
+</div>
+
+<div id="tab-agenda" class="tab-content">
+<div class="card">
+<h2>Novo Agendamento</h2>
+<div class="form-grid">
+<div class="form-group"><label>Cliente *</label><select id="ag-cliente"></select></div>
+<div class="form-group"><label>Data *</label><input type="date" id="ag-data"></div>
+<div class="form-group"><label>Hora (opcional)</label><input type="time" id="ag-hora"></div>
+<div class="form-group"><label>Procedimento *</label><select id="ag-procedimento"></select></div>
+<div class="form-group" id="ag-procedimento-outro-grupo" style="display:none;"><label>Qual procedimento?</label><input type="text" id="ag-procedimento-outro" placeholder="Digite o nome"></div>
+<div class="form-group"><label>Valor (R$)</label><input type="number" id="ag-valor" placeholder="0.00" step="0.01" min="0"></div>
+<div class="form-group"><label>Forma de Pagamento</label>
+<select id="ag-pagamento">
+<option value="">A definir</option>
+<option value="Dinheiro">💵 Dinheiro</option>
+<option value="Pix">📱 Pix</option>
+<option value="Cartão de Débito">💳 Cartão de Débito</option>
+<option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+<option value="Outro">Outro</option>
+</select>
+</div>
+<div class="form-group"><label>Status Pagamento</label>
+<select id="ag-status-pag">
+<option value="pendente">⏳ Pendente</option>
+<option value="pago">✅ Pago</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Observações</label><textarea id="ag-obs"></textarea></div>
+<button class="btn" id="btn-salvar-agendamento" type="button">+ Agendar</button>
+</div>
+<div class="card">
+<h2>Agenda (agendamentos + procedimentos)</h2>
+<div class="filter-bar">
+<button class="filter-btn active" data-filtro="proximos" type="button">Próximos</button>
+<button class="filter-btn" data-filtro="hoje" type="button">Hoje</button>
+<button class="filter-btn" data-filtro="semana" type="button">7 dias</button>
+<button class="filter-btn" data-filtro="mes" type="button">Este mês</button>
+<button class="filter-btn" data-filtro="todos" type="button">Todos</button>
+</div>
+<div id="agenda-lista"></div>
+</div>
+</div>
+
+<div id="tab-procedimentos" class="tab-content">
+<div class="card">
+<h2>➕ Novo Procedimento no Catálogo</h2>
+<p class="backup-info">Cadastre os procedimentos que você oferece. Eles aparecerão nos formulários de agendamento e de histórico.</p>
+<div class="form-grid">
+<div class="form-group"><label>Nome *</label><input type="text" id="proc-cat-nome" placeholder="Ex: Limpeza de pele"></div>
+<div class="form-group"><label>Dias para retorno *</label><input type="number" id="proc-cat-dias" placeholder="Ex: 180 (0 = sem lembrete)" min="0" step="1"></div>
+<div class="form-group"><label>Valor padrão (opcional)</label><input type="number" id="proc-cat-valor" placeholder="0.00" step="0.01" min="0"></div>
+<div class="form-group"><label>Ícone (opcional)</label><input type="text" id="proc-cat-icone" placeholder="Ex: 💆 (1 emoji)" maxlength="4"></div>
+</div>
+<button class="btn" id="btn-salvar-proc-cat" type="button">+ Cadastrar Procedimento</button>
+</div>
+<div class="card">
+<h2>💅 Catálogo de Procedimentos</h2>
+<div id="lista-proc-cat"></div>
+</div>
+</div>
+
+<div id="tab-aniversarios" class="tab-content">
+<div class="card">
+<h2>🎂 Aniversariantes</h2>
+<p class="backup-info">Para editar a mensagem de parabéns, crie um texto com o título exato <strong>"Parabéns!"</strong> na aba Mensagens.</p>
+<div id="aniversarios-lista"></div>
+</div>
+</div>
+
+<div id="tab-financeiro" class="tab-content">
+<div class="card">
+<h2>💰 Relatório Financeiro</h2>
+<div class="fin-filtros">
+<div class="form-group"><label>De</label><input type="date" id="fin-de"></div>
+<div class="form-group"><label>Até</label><input type="date" id="fin-ate"></div>
+</div>
+<div class="form-group"><label>Cliente (opcional)</label><select id="fin-cliente"><option value="">Todas as clientes</option></select></div>
+<div class="filter-bar">
+<button class="filter-btn" data-fin="mes" type="button">Este mês</button>
+<button class="filter-btn" data-fin="mes-passado" type="button">Mês passado</button>
+<button class="filter-btn" data-fin="3meses" type="button">3 meses</button>
+<button class="filter-btn" data-fin="ano" type="button">Este ano</button>
+<button class="filter-btn active" data-fin="todos" type="button">Tudo</button>
+</div>
+<div id="fin-resultado"></div>
+</div>
+</div>
+
+<div id="tab-mensagens" class="tab-content">
+<div class="card">
+<h2>📝 Meus Textos</h2>
+<p class="backup-info">Para o texto de parabéns, use o título exato <strong>Parabéns!</strong> — ele será usado no envio de aniversário.</p>
+<div class="form-grid">
+<div class="form-group"><label>Nome do texto</label><input type="text" id="msg-titulo" placeholder="Ex: Confirmação de agendamento"></div>
+</div>
+<div class="form-group"><label>Texto da mensagem</label><textarea id="msg-conteudo" placeholder="Olá {nome}, tudo bem?..." style="min-height:100px;"></textarea></div>
+<div class="legend-box">
+<strong>📖 Variáveis disponíveis:</strong><br>
+<code>{nome}</code> → Nome da cliente<br>
+<code>{procedimento}</code> → Último procedimento feito<br>
+<code>{dias_desde}</code> → Dias desde o último procedimento<br>
+<code>{ultima_data}</code> → Data da última vez que fez
+</div>
+<button class="btn" id="btn-salvar-msg" type="button">+ Salvar Texto</button>
+<div id="lista-msg-textos" style="margin-top:20px;"></div>
+</div>
+
+<div class="card">
+<h2>📤 Envio em Massa</h2>
+<p class="backup-info">Escolha um filtro, selecione as clientes, escolha um texto e clique em "Iniciar".</p>
+<input type="text" class="search-box" id="busca-massa" placeholder="🔍 Buscar cliente...">
+<div class="filter-bar">
+<button class="filter-btn active" data-massa="todas" type="button">Todas</button>
+<button class="filter-btn" data-massa="aniv-mes" type="button">🎂 Aniversariantes</button>
+<button class="filter-btn" data-massa="com-agendamento" type="button">📅 Com agendamento</button>
+<button class="filter-btn" data-massa="retorno" type="button">💅 Retorno de procedimento</button>
+</div>
+<div id="massa-filtro-retorno" style="display:none;background:#f0f4f8;padding:15px;border-radius:10px;margin-bottom:15px;">
+<div class="form-group"><label>Procedimento</label><select id="massa-retorno-proc"><option value="">Selecione...</option></select></div>
+<div class="filter-bar" style="margin-top:10px;">
+<button class="filter-btn active" data-retorno="precisam" type="button">⚠️ Precisam retornar</button>
+<button class="filter-btn" data-retorno="fizeram" type="button">✅ Já fizeram</button>
+<button class="filter-btn" data-retorno="nunca" type="button">🆕 Nunca fizeram</button>
+</div>
+</div>
+<div style="margin-bottom:10px;">
+<button class="btn small gray" id="btn-marcar-todas" type="button">Marcar todas</button>
+<button class="btn small gray" id="btn-desmarcar-todas" type="button">Desmarcar todas</button>
+</div>
+<div id="massa-lista"></div>
+<div class="form-group" style="margin-top:15px;"><label>Texto a enviar</label><select id="massa-texto"><option value="">Selecione um texto...</option></select></div>
+<button class="btn green" id="btn-iniciar-massa" type="button" disabled>🚀 Iniciar envio</button>
+<div id="massa-status" class="massa-status" style="display:none;"></div>
+</div>
+</div>
+
+<div id="tab-backup" class="tab-content">
+<div class="card">
+<h2>💾 Backup dos Dados</h2>
+<p class="backup-info">Os dados ficam salvos <strong>só neste navegador</strong>. Faça backup regularmente.</p>
+<button class="btn green" id="btn-exportar" type="button">⬇️ Baixar Backup (.json)</button>
+<button class="btn blue" id="btn-importar-trigger" type="button">⬆️ Restaurar Backup</button>
+<input type="file" id="input-importar" accept=".json" style="display:none;">
+<div class="backup-info" id="info-backup" style="margin-top:20px;"></div>
+</div>
+<div class="card">
+<h2>📥 Exportar CSV</h2>
+<p class="backup-info">Exporta cada tabela como um arquivo CSV separado (abre no Excel, Google Sheets, etc.).</p>
+<button class="btn green" id="btn-csv-clientes" type="button">👥 Clientes.csv</button>
+<button class="btn green" id="btn-csv-agendamentos" type="button">📅 Agendamentos.csv</button>
+<button class="btn green" id="btn-csv-procedimentos" type="button">💅 Procedimentos.csv</button>
+<button class="btn green" id="btn-csv-catalogo" type="button">💅 Catálogo.csv</button>
+<button class="btn green" id="btn-csv-mensagens" type="button">📝 Mensagens.csv</button>
+</div>
+<div class="card">
+<h2>🔧 Manutenção</h2>
+<button class="btn gray" id="btn-ver-pendentes" type="button">🔍 Ver todos pendentes</button>
+<button class="btn yellow" id="btn-zerar-pendentes" type="button">✅ Marcar todos como pagos</button>
+<button class="btn blue" id="btn-sincronizar" type="button">🔄 Sincronizar pagamentos</button>
+<button class="btn blue" id="btn-diagnostico" type="button">🔍 Diagnóstico</button>
+<div id="manutencao-resultado" style="margin-top:15px;font-size:0.9rem;"></div>
+</div>
+<div class="card">
+<h2>⚠️ Zona de Perigo</h2>
+<button class="btn danger" id="btn-apagar-tudo" type="button">🗑 Apagar Todos os Dados</button>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-cliente">
+<div class="modal">
+<div class="modal-header">
+<h2 id="modal-cliente-nome"></h2>
+<button class="close-btn" id="btn-fechar-modal" type="button">×</button>
+</div>
+<div id="modal-cliente-info"></div>
+<div class="section-box">
+<h3>✏️ Editar dados da cliente</h3>
+<div class="form-grid">
+<div class="form-group"><label>Nome</label><input type="text" id="edit-nome"></div>
+<div class="form-group"><label>Celular</label><input type="tel" id="edit-celular"></div>
+<div class="form-group"><label>Aniversário</label><input type="date" id="edit-aniversario"></div>
+</div>
+<div class="form-group"><label>Observações gerais</label><textarea id="edit-obs" style="min-height:100px;"></textarea></div>
+<button class="btn blue" id="btn-salvar-edicao" type="button">💾 Salvar Alterações</button>
+</div>
+<div class="section-box">
+<h3>➕ Adicionar Procedimento</h3>
+<div class="form-grid">
+<div class="form-group"><label>Data</label><input type="date" id="proc-data"></div>
+<div class="form-group"><label>Procedimento</label><select id="proc-nome"></select></div>
+<div class="form-group" id="proc-outro-grupo" style="display:none;"><label>Qual procedimento?</label><input type="text" id="proc-outro" placeholder="Digite o nome"></div>
+<div class="form-group"><label>Valor (R$)</label><input type="number" id="proc-valor" placeholder="0.00" step="0.01" min="0"></div>
+<div class="form-group"><label>Forma de Pagamento</label>
+<select id="proc-pagamento">
+<option value="">A definir</option>
+<option value="Dinheiro">💵 Dinheiro</option>
+<option value="Pix">📱 Pix</option>
+<option value="Cartão de Débito">💳 Cartão de Débito</option>
+<option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+<option value="Outro">Outro</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Observações</label><textarea id="proc-obs"></textarea></div>
+<button class="btn" id="btn-add-procedimento" type="button">Registrar</button>
+</div>
+<div class="section-box">
+<h3>📋 Histórico de Procedimentos</h3>
+<div id="historico-lista"></div>
+</div>
+<div class="section-box">
+<h3>📅 Agendamentos desta Cliente</h3>
+<div id="agendamentos-cliente"></div>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-editar-ag">
+<div class="modal">
+<div class="modal-header">
+<h2>✏️ Editar Agendamento</h2>
+<button class="close-btn" id="btn-fechar-editar-ag" type="button">×</button>
+</div>
+<div class="form-grid">
+<div class="form-group"><label>Cliente</label><select id="editag-cliente"></select></div>
+<div class="form-group"><label>Data</label><input type="date" id="editag-data"></div>
+<div class="form-group"><label>Hora</label><input type="time" id="editag-hora"></div>
+<div class="form-group"><label>Procedimento</label><input type="text" id="editag-procedimento"></div>
+<div class="form-group"><label>Valor (R$)</label><input type="number" id="editag-valor" step="0.01" min="0"></div>
+<div class="form-group"><label>Forma de Pagamento</label>
+<select id="editag-pagamento">
+<option value="">A definir</option>
+<option value="Dinheiro">💵 Dinheiro</option>
+<option value="Pix">📱 Pix</option>
+<option value="Cartão de Débito">💳 Cartão de Débito</option>
+<option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+<option value="Outro">Outro</option>
+</select>
+</div>
+<div class="form-group"><label>Status Pagamento</label>
+<select id="editag-status-pag">
+<option value="pendente">⏳ Pendente</option>
+<option value="pago">✅ Pago</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Observações</label><textarea id="editag-obs"></textarea></div>
+<button class="btn" id="btn-salvar-editar-ag" type="button">💾 Salvar</button>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-editar-proc">
+<div class="modal">
+<div class="modal-header">
+<h2>✏️ Editar Procedimento</h2>
+<button class="close-btn" id="btn-fechar-editar-proc" type="button">×</button>
+</div>
+<div class="form-grid">
+<div class="form-group"><label>Data</label><input type="date" id="editproc-data"></div>
+<div class="form-group"><label>Procedimento</label><input type="text" id="editproc-nome"></div>
+<div class="form-group"><label>Valor (R$)</label><input type="number" id="editproc-valor" step="0.01" min="0"></div>
+<div class="form-group"><label>Forma de Pagamento</label>
+<select id="editproc-pagamento">
+<option value="">A definir</option>
+<option value="Dinheiro">💵 Dinheiro</option>
+<option value="Pix">📱 Pix</option>
+<option value="Cartão de Débito">💳 Cartão de Débito</option>
+<option value="Cartão de Crédito">💳 Cartão de Crédito</option>
+<option value="Outro">Outro</option>
+</select>
+</div>
+<div class="form-group"><label>Status Pagamento</label>
+<select id="editproc-status-pag">
+<option value="pendente">⏳ Pendente</option>
+<option value="pago">✅ Pago</option>
+</select>
+</div>
+</div>
+<div class="form-group"><label>Observações</label><textarea id="editproc-obs"></textarea></div>
+<button class="btn" id="btn-salvar-editar-proc" type="button">💾 Salvar</button>
+</div>
+</div>
+
+<div class="modal-overlay" id="modal-lista-pendentes">
+<div class="modal">
+<div class="modal-header">
+<h2 id="modal-pendentes-titulo">Pendentes</h2>
+<button class="close-btn" id="btn-fechar-lista-pendentes" type="button">×</button>
+</div>
+<div id="modal-pendentes-conteudo"></div>
+</div>
+</div>
+
+
+<script>
+(function() {
+'use strict';
+
+var clientes = [];
+var agendamentos = [];
+var procedimentos = [];
+var mensagens = [];
+var catalogoProcedimentos = [];
+var clienteAtualId = null;
+var agEditandoId = null;
+var procEditandoId = null;
+var procCatEditandoId = null;
+var filtroAgenda = 'proximos';
+var filtroFin = 'todos';
+var filtroMassa = 'todas';
+var filtroRetorno = 'precisam';
+var selecionadosMassa = {};
+var filaMassa = [];
+var filaMassaIndex = 0;
+var filaMassaTexto = '';
+
+try {
+  clientes = JSON.parse(localStorage.getItem('crm_clientes') || '[]');
+  agendamentos = JSON.parse(localStorage.getItem('crm_agendamentos') || '[]');
+  procedimentos = JSON.parse(localStorage.getItem('crm_procedimentos') || '[]');
+  mensagens = JSON.parse(localStorage.getItem('crm_mensagens') || '[]');
+  catalogoProcedimentos = JSON.parse(localStorage.getItem('crm_catalogo') || '[]');
+} catch(e) { console.warn('Erro ao carregar:', e); }
+
+function salvar() {
+  try {
+    localStorage.setItem('crm_clientes', JSON.stringify(clientes));
+    localStorage.setItem('crm_agendamentos', JSON.stringify(agendamentos));
+    localStorage.setItem('crm_procedimentos', JSON.stringify(procedimentos));
+    localStorage.setItem('crm_mensagens', JSON.stringify(mensagens));
+    localStorage.setItem('crm_catalogo', JSON.stringify(catalogoProcedimentos));
+  } catch(e) { alert('Erro ao salvar: ' + e.message); }
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function $(id) { return document.getElementById(id); }
+
+function formatarData(iso) {
+  if (!iso) return '—';
+  var p = iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
+function formatarDinheiro(v) {
+  var n = parseFloat(v) || 0;
+  return 'R$ ' + n.toFixed(2).replace('.', ',');
+}
+
+function hojeISO() {
+  var d = new Date();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var dia = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + m + '-' + dia;
+}
+
+function diasEntre(data1, data2) {
+  if (!data1 || !data2) return 0;
+  var d1 = new Date(data1 + 'T00:00:00');
+  var d2 = new Date(data2 + 'T00:00:00');
+  return Math.floor((d2 - d1) / (1000*60*60*24));
+}
+
+function somarDias(iso, dias) {
+  if (!iso) return '';
+  var d = new Date(iso + 'T00:00:00');
+  d.setDate(d.getDate() + parseInt(dias));
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var dia = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' + m + '-' + dia;
+}
+
+function switchTab(tab) {
+  var abas = document.querySelectorAll('.tab-content');
+  for (var i = 0; i < abas.length; i++) abas[i].classList.remove('active');
+  var btns = document.querySelectorAll('.tab-btn');
+  for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+  var conteudo = $('tab-' + tab);
+  var botao = $('btn-' + tab);
+  if (conteudo) conteudo.classList.add('active');
+  if (botao) botao.classList.add('active');
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'clientes') { renderClientes(); renderSelectClientes(); renderFinSelectClientes(); }
+  if (tab === 'agenda') { renderAgenda(); renderSelectClientes(); renderSelectProcedimentos(); }
+  if (tab === 'procedimentos') { renderListaProcCat(); }
+  if (tab === 'aniversarios') renderAniversarios();
+  if (tab === 'financeiro') renderFinanceiro();
+  if (tab === 'mensagens') { renderTextosMsg(); renderMassaLista(); renderSelectProcRetorno(); }
+  if (tab === 'backup') renderInfoBackup();
+}
+
+function salvarCliente() {
+  var nome = $('cli-nome').value.trim();
+  var celular = $('cli-celular').value.trim();
+  var aniversario = $('cli-aniversario').value;
+  var obs = $('cli-obs').value.trim();
+  if (!nome) { alert('Informe o nome!'); return; }
+  clientes.push({ id: uid(), nome: nome, celular: celular, aniversario: aniversario, obs: obs });
+  salvar();
+  $('cli-nome').value = '';
+  $('cli-celular').value = '';
+  $('cli-aniversario').value = '';
+  $('cli-obs').value = '';
+  renderClientes();
+  renderSelectClientes();
+  renderFinSelectClientes();
+  alert('Cliente cadastrada! ✿');
+}
+
+function renderClientes() {
+  var busca = ($('busca-cliente') ? $('busca-cliente').value : '').toLowerCase();
+  var lista = $('clientes-lista');
+  var filtrados = clientes.filter(function(c) {
+    return c.nome.toLowerCase().indexOf(busca) !== -1 || (c.celular || '').indexOf(busca) !== -1;
+  });
+  if (!filtrados.length) { lista.innerHTML = '<div class="empty-msg">Nenhuma cliente encontrada</div>'; return; }
+  var html = '';
+  filtrados.forEach(function(c) {
+    var qtdP = procedimentos.filter(function(p){ return p.clienteId === c.id; }).length;
+    var qtdA = agendamentos.filter(function(a){ return a.clienteId === c.id; }).length;
+    html += '<div class="client-card" data-id="' + c.id + '">' +
+      '<h4>' + c.nome + '</h4>' +
+      '<p>📱 ' + (c.celular || 'sem celular') + '</p>' +
+      '<p>🎂 ' + (c.aniversario ? formatarData(c.aniversario) : 'não informado') + '</p>' +
+      '<p style="font-size:0.75rem;margin-top:6px;color:#a34a6b;">' + qtdP + ' procedimento(s) • ' + qtdA + ' agendamento(s)</p>' +
+      (c.obs ? '<p style="font-size:0.8rem;margin-top:6px;color:#6a4a5a;font-style:italic;">📝 ' + c.obs + '</p>' : '') +
+      '</div>';
+  });
+  lista.innerHTML = html;
+  var cards = lista.querySelectorAll('.client-card');
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].addEventListener('click', function() {
+      abrirCliente(this.getAttribute('data-id'));
+    });
+  }
+}
+
+function abrirCliente(id) {
+  clienteAtualId = id;
+  var c = clientes.find(function(x){ return x.id === id; });
+  if (!c) return;
+  $('modal-cliente-nome').textContent = c.nome;
+  var celLimpo = (c.celular || '').replace(/\D/g, '');
+  $('modal-cliente-info').innerHTML =
+    '<p><strong>📱 Celular:</strong> ' + (c.celular || '—') + '</p>' +
+    '<p><strong>🎂 Aniversário:</strong> ' + (c.aniversario ? formatarData(c.aniversario) : '—') + '</p>' +
+    '<div style="margin-top:10px;">' +
+    (celLimpo ? '<button class="btn green small" id="btn-wa-cliente" type="button">💬 WhatsApp</button>' : '') +
+    '<button class="btn small danger" id="btn-excluir-cliente" type="button">🗑 Excluir Cliente</button>' +
+    '</div>';
+  if (celLimpo) {
+    $('btn-wa-cliente').addEventListener('click', function(){ abrirWhatsApp(c.celular, ''); });
+  }
+  $('btn-excluir-cliente').addEventListener('click', function(){ excluirCliente(c.id); });
+  $('edit-nome').value = c.nome || '';
+  $('edit-celular').value = c.celular || '';
+  $('edit-aniversario').value = c.aniversario || '';
+  $('edit-obs').value = c.obs || '';
+  $('proc-data').value = hojeISO();
+  $('proc-nome').value = '';
+  $('proc-outro').value = '';
+  $('proc-outro-grupo').style.display = 'none';
+  $('proc-valor').value = '';
+  $('proc-pagamento').value = '';
+  $('proc-obs').value = '';
+  renderSelectProcForm();
+  renderHistorico();
+  renderAgendamentosCliente();
+  $('modal-cliente').classList.add('active');
+}
+
+function fecharModal() {
+  $('modal-cliente').classList.remove('active');
+  clienteAtualId = null;
+}
+
+function salvarEdicao() {
+  var c = clientes.find(function(x){ return x.id === clienteAtualId; });
+  if (!c) return;
+  var nome = $('edit-nome').value.trim();
+  if (!nome) { alert('Nome não pode ficar vazio!'); return; }
+  c.nome = nome;
+  c.celular = $('edit-celular').value.trim();
+  c.aniversario = $('edit-aniversario').value;
+  c.obs = $('edit-obs').value.trim();
+  salvar();
+  $('modal-cliente-nome').textContent = c.nome;
+  renderClientes();
+  renderSelectClientes();
+  renderFinSelectClientes();
+  alert('Dados atualizados! ✅');
+}
+
+function excluirCliente(id) {
+  if (!confirm('Excluir esta cliente e todo o histórico dela?')) return;
+  clientes = clientes.filter(function(c){ return c.id !== id; });
+  procedimentos = procedimentos.filter(function(p){ return p.clienteId !== id; });
+  agendamentos = agendamentos.filter(function(a){ return a.clienteId !== id; });
+  salvar();
+  fecharModal();
+  renderClientes();
+  renderDashboard();
+  renderAgenda();
+  renderFinanceiro();
+}
+
+function abrirWhatsApp(celular, mensagem) {
+  var num = (celular || '').replace(/\D/g, '');
+  if (!num) { alert('Cliente sem celular cadastrado.'); return; }
+  if (num.length <= 11) num = '55' + num;
+  var url = 'https://wa.me/' + num + (mensagem ? '?text=' + encodeURIComponent(mensagem) : '');
+  window.open(url, '_blank');
+}
+
+
+// ===== CATÁLOGO DE PROCEDIMENTOS =====
+function salvarProcCatalogo() {
+  var nome = $('proc-cat-nome').value.trim();
+  var dias = $('proc-cat-dias').value;
+  var valor = $('proc-cat-valor').value;
+  var icone = $('proc-cat-icone').value.trim();
+  if (!nome) { alert('Informe o nome do procedimento!'); return; }
+  if (dias === '' || dias === null) { alert('Informe os dias para retorno (0 se não tiver)!'); return; }
+  catalogoProcedimentos.push({ id: uid(), nome: nome, dias: parseInt(dias, 10) || 0, valorPadrao: valor || '', icone: icone || '', ativo: true });
+  salvar();
+  $('proc-cat-nome').value = '';
+  $('proc-cat-dias').value = '';
+  $('proc-cat-valor').value = '';
+  $('proc-cat-icone').value = '';
+  renderListaProcCat();
+  renderSelectProcedimentos();
+  renderSelectProcForm();
+  renderSelectProcRetorno();
+  alert('Procedimento cadastrado! 💅');
+}
+
+function renderListaProcCat() {
+  var el = $('lista-proc-cat');
+  if (!el) return;
+  if (!catalogoProcedimentos.length) {
+    el.innerHTML = '<div class="empty-msg">Nenhum procedimento cadastrado ainda</div>';
+    return;
+  }
+  var html = '';
+  catalogoProcedimentos.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); }).forEach(function(p) {
+    var icon = p.icone ? p.icone + ' ' : '';
+    var valorTxt = p.valorPadrao ? ' • ' + formatarDinheiro(p.valorPadrao) : '';
+    var diasTxt = p.dias > 0 ? p.dias + ' dias' : 'sem lembrete';
+    html += '<div class="proc-card' + (p.ativo === false ? ' inativo' : '') + '">' +
+      '<div class="info">' +
+      '<strong>' + icon + p.nome + (p.ativo === false ? ' (inativo)' : '') + '</strong>' +
+      '<small>⏱ Retorno: ' + diasTxt + valorTxt + '</small>' +
+      '</div>' +
+      '<div style="margin-top:8px;">' +
+      '<button class="btn blue small" data-proccat-edit="' + p.id + '" type="button">✏️ Editar</button>' +
+      '<button class="btn ' + (p.ativo === false ? 'green' : 'gray') + ' small" data-proccat-toggle="' + p.id + '" type="button">' + (p.ativo === false ? '✅ Ativar' : '⏸ Inativar') + '</button>' +
+      '<button class="btn danger small" data-proccat-del="' + p.id + '" type="button">🗑</button>' +
+      '</div>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+
+  var btnsE = el.querySelectorAll('[data-proccat-edit]');
+  for (var i = 0; i < btnsE.length; i++) {
+    btnsE[i].addEventListener('click', function(){ editarProcCatalogo(this.getAttribute('data-proccat-edit')); });
+  }
+  var btnsT = el.querySelectorAll('[data-proccat-toggle]');
+  for (var j = 0; j < btnsT.length; j++) {
+    btnsT[j].addEventListener('click', function(){ toggleProcCatalogo(this.getAttribute('data-proccat-toggle')); });
+  }
+  var btnsD = el.querySelectorAll('[data-proccat-del]');
+  for (var k = 0; k < btnsD.length; k++) {
+    btnsD[k].addEventListener('click', function(){ excluirProcCatalogo(this.getAttribute('data-proccat-del')); });
+  }
+}
+
+function editarProcCatalogo(id) {
+  var p = catalogoProcedimentos.find(function(x){ return x.id === id; });
+  if (!p) return;
+  var nome = prompt('Nome:', p.nome);
+  if (nome === null) return;
+  var dias = prompt('Dias para retorno:', p.dias);
+  if (dias === null) return;
+  var valor = prompt('Valor padrão (deixe vazio se não tiver):', p.valorPadrao || '');
+  if (valor === null) return;
+  var icone = prompt('Ícone (emoji, deixe vazio se não tiver):', p.icone || '');
+  if (icone === null) return;
+  if (!nome.trim()) { alert('Nome não pode ficar vazio'); return; }
+  p.nome = nome.trim();
+  p.dias = parseInt(dias, 10) || 0;
+  p.valorPadrao = valor.trim();
+  p.icone = icone.trim();
+  salvar();
+  renderListaProcCat();
+  renderSelectProcedimentos();
+  renderSelectProcForm();
+  renderSelectProcRetorno();
+  alert('Atualizado! ✅');
+}
+
+function toggleProcCatalogo(id) {
+  var p = catalogoProcedimentos.find(function(x){ return x.id === id; });
+  if (!p) return;
+  p.ativo = p.ativo === false ? true : false;
+  salvar();
+  renderListaProcCat();
+  renderSelectProcedimentos();
+  renderSelectProcForm();
+  renderSelectProcRetorno();
+}
+
+function excluirProcCatalogo(id) {
+  var p = catalogoProcedimentos.find(function(x){ return x.id === id; });
+  if (!p) return;
+  var usados = procedimentos.filter(function(x){ return x.nome === p.nome; }).length
+            + agendamentos.filter(function(x){ return x.procedimento === p.nome; }).length;
+  if (usados > 0) {
+    if (!confirm('Este procedimento já foi usado em ' + usados + ' registro(s).\n\nRecomendo INATIVAR ao invés de excluir.\n\nExcluir mesmo assim?')) return;
+  } else {
+    if (!confirm('Excluir este procedimento?')) return;
+  }
+  catalogoProcedimentos = catalogoProcedimentos.filter(function(x){ return x.id !== id; });
+  salvar();
+  renderListaProcCat();
+  renderSelectProcedimentos();
+  renderSelectProcForm();
+  renderSelectProcRetorno();
+}
+
+// ===== SELECTS AUXILIARES =====
+function renderSelectProcedimentos() {
+  var sel = $('ag-procedimento');
+  if (!sel) return;
+  var html = '<option value="">Selecione...</option>';
+  catalogoProcedimentos.filter(function(p){ return p.ativo !== false; })
+    .sort(function(a,b){ return a.nome.localeCompare(b.nome); })
+    .forEach(function(p) {
+      var icone = p.icone ? p.icone + ' ' : '';
+      html += '<option value="' + p.nome + '">' + icone + p.nome + '</option>';
+    });
+  html += '<option value="__outro__">+ Outro (digitar)</option>';
+  sel.innerHTML = html;
+}
+
+function renderSelectProcForm() {
+  var sel = $('proc-nome');
+  if (!sel) return;
+  var html = '<option value="">Selecione...</option>';
+  catalogoProcedimentos.filter(function(p){ return p.ativo !== false; })
+    .sort(function(a,b){ return a.nome.localeCompare(b.nome); })
+    .forEach(function(p) {
+      var icone = p.icone ? p.icone + ' ' : '';
+      html += '<option value="' + p.nome + '">' + icone + p.nome + '</option>';
+    });
+  html += '<option value="__outro__">+ Outro (digitar)</option>';
+  sel.innerHTML = html;
+}
+
+function renderSelectProcRetorno() {
+  var sel = $('massa-retorno-proc');
+  if (!sel) return;
+  var html = '<option value="">Selecione...</option>';
+  catalogoProcedimentos.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); })
+    .forEach(function(p) {
+      var icone = p.icone ? p.icone + ' ' : '';
+      html += '<option value="' + p.nome + '">' + icone + p.nome + '</option>';
+    });
+  sel.innerHTML = html;
+}
+
+function renderSelectClientes() {
+  var sel = $('ag-cliente');
+  if (!sel) return;
+  var html = '<option value="">Selecione...</option>';
+  clientes.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); }).forEach(function(c) {
+    html += '<option value="' + c.id + '">' + c.nome + '</option>';
+  });
+  sel.innerHTML = html;
+}
+
+function renderFinSelectClientes() {
+  var sel = $('fin-cliente');
+  if (!sel) return;
+  var atual = sel.value;
+  var html = '<option value="">Todas as clientes</option>';
+  clientes.slice().sort(function(a,b){ return a.nome.localeCompare(b.nome); }).forEach(function(c) {
+    html += '<option value="' + c.id + '">' + c.nome + '</option>';
+  });
+  sel.innerHTML = html;
+  if (atual) sel.value = atual;
+}
+
+// ===== PROCEDIMENTOS (registro) =====
+function adicionarProcedimento() {
+  var data = $('proc-data').value;
+  var nomeSel = $('proc-nome').value;
+  var nome = nomeSel === '__outro__' ? $('proc-outro').value.trim() : nomeSel;
+  var valor = $('proc-valor').value;
+  var pagamento = $('proc-pagamento').value;
+  var obs = $('proc-obs').value.trim();
+  if (!data || !nome) { alert('Preencha data e procedimento!'); return; }
+  var statusPag = (pagamento && parseFloat(valor) > 0) ? 'pago' : 'pendente';
+  procedimentos.push({ id: uid(), clienteId: clienteAtualId, data: data, nome: nome, valor: valor, pagamento: pagamento, statusPag: statusPag, obs: obs });
+  salvar();
+  $('proc-nome').value = '';
+  $('proc-outro').value = '';
+  $('proc-outro-grupo').style.display = 'none';
+  $('proc-valor').value = '';
+  $('proc-pagamento').value = '';
+  $('proc-obs').value = '';
+  renderHistorico();
+  renderClientes();
+  renderAgenda();
+  renderDashboard();
+  renderFinanceiro();
+}
+
+function renderHistorico() {
+  var lista = procedimentos.filter(function(p){ return p.clienteId === clienteAtualId; })
+    .sort(function(a,b){ return b.data.localeCompare(a.data); });
+  var el = $('historico-lista');
+  if (!lista.length) { el.innerHTML = '<div class="empty-msg">Sem procedimentos registrados</div>'; return; }
+  var html = '';
+  lista.forEach(function(p) {
+    var stPag = p.statusPag || 'pendente';
+    var pagBadge = stPag === 'pago' ? '<span class="badge green">✅ Pago</span>' : '<span class="badge yellow">⏳ Pendente</span>';
+    html += '<div class="history-item">' +
+      '<div class="item-header"><span class="item-date">' + formatarData(p.data) + '</span>' +
+      '<div><button class="btn small blue" data-editproc="' + p.id + '" type="button">✏️</button>' +
+      '<button class="btn small danger" data-proc="' + p.id + '" type="button">×</button></div></div>' +
+      '<strong>' + p.nome + '</strong> ' + pagBadge +
+      (p.valor ? ' <span class="badge green">' + formatarDinheiro(p.valor) + '</span>' : '') +
+      (p.pagamento ? ' <span class="badge blue">' + p.pagamento + '</span>' : '') +
+      (p.obs ? '<p style="margin-top:4px;font-size:0.88rem;">' + p.obs + '</p>' : '') +
+      '</div>';
+  });
+  el.innerHTML = html;
+  var btnsEdit = el.querySelectorAll('[data-editproc]');
+  for (var i = 0; i < btnsEdit.length; i++) {
+    btnsEdit[i].addEventListener('click', function() { abrirEditarProcedimento(this.getAttribute('data-editproc')); });
+  }
+  var btns = el.querySelectorAll('[data-proc]');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].addEventListener('click', function() { excluirProcedimento(this.getAttribute('data-proc')); });
+  }
+}
+
+function excluirProcedimento(id) {
+  if (!confirm('Excluir este procedimento?')) return;
+  procedimentos = procedimentos.filter(function(p){ return p.id !== id; });
+  salvar();
+  renderHistorico();
+  renderClientes();
+  renderAgenda();
+  renderDashboard();
+  renderFinanceiro();
+}
+
+function abrirEditarProcedimento(id) {
+  procEditandoId = id;
+  var p = procedimentos.find(function(x){ return x.id === id; });
+  if (!p) return;
+  $('editproc-data').value = p.data || '';
+  $('editproc-nome').value = p.nome || '';
+  $('editproc-valor').value = p.valor || '';
+  $('editproc-pagamento').value = p.pagamento || '';
+  $('editproc-status-pag').value = p.statusPag || 'pendente';
+  $('editproc-obs').value = p.obs || '';
+  $('modal-editar-proc').classList.add('active');
+}
+
+function salvarEditarProcedimento() {
+  var p = procedimentos.find(function(x){ return x.id === procEditandoId; });
+  if (!p) return;
+  var data = $('editproc-data').value;
+  var nome = $('editproc-nome').value.trim();
+  if (!data || !nome) { alert('Preencha data e procedimento!'); return; }
+  p.data = data;
+  p.nome = nome;
+  p.valor = $('editproc-valor').value;
+  p.pagamento = $('editproc-pagamento').value;
+  p.statusPag = $('editproc-status-pag').value;
+  p.obs = $('editproc-obs').value.trim();
+  if (p.agendamentoId) {
+    var a = agendamentos.find(function(x){ return x.id === p.agendamentoId; });
+    if (a) { a.statusPag = p.statusPag; }
+  }
+  salvar();
+  $('modal-editar-proc').classList.remove('active');
+  procEditandoId = null;
+  renderHistorico();
+  renderClientes();
+  renderFinanceiro();
+  renderAgenda();
+  renderDashboard();
+  alert('Procedimento atualizado! ✅');
+}
+
+function renderAgendamentosCliente() {
+  var lista = agendamentos.filter(function(a){ return a.clienteId === clienteAtualId; })
+    .sort(function(a,b){ return (b.data + (b.hora||'')).localeCompare(a.data + (a.hora||'')); });
+  var el = $('agendamentos-cliente');
+  if (!lista.length) { el.innerHTML = '<div class="empty-msg">Sem agendamentos</div>'; return; }
+  var hoje = hojeISO();
+  var html = '';
+  lista.forEach(function(a) {
+    var futuro = a.data >= hoje;
+    var st = a.status || 'agendado';
+    var atrasado = !futuro && st === 'agendado';
+    var stBadge = st === 'realizado' ? 'green' : (st === 'faltou' ? 'gray' : (st === 'cancelado' ? 'red' : (atrasado ? 'red' : (futuro ? 'green' : 'gray'))));
+    var stLabel = st === 'realizado' ? '✅ Realizado' : (st === 'faltou' ? '❌ Faltou' : (st === 'cancelado' ? '🚫 Cancelado' : (atrasado ? '⚠️ Atrasado' : (futuro ? '📅 Agendado' : '⏳ Passou'))));
+    var stPag = a.statusPag || 'pendente';
+    var pagBadge = stPag === 'pago' ? '<span class="badge green">✅ Pago</span>' : '<span class="badge yellow">⏳ Pendente</span>';
+    html += '<div class="appointment-item ' + (atrasado ? 'atrasado' : (futuro && st === 'agendado' ? 'future' : 'past')) + '">' +
+      '<div class="item-header"><span class="item-date">' + formatarData(a.data) + (a.hora ? ' ' + a.hora : '') + '</span>' +
+      '<span class="badge ' + stBadge + '">' + stLabel + '</span></div>' +
+      '<strong>' + a.procedimento + '</strong> ' + pagBadge +
+      (a.valor ? ' <span class="badge green">' + formatarDinheiro(a.valor) + '</span>' : '') +
+      (a.pagamento ? ' <span class="badge blue">' + a.pagamento + '</span>' : '') +
+      (a.obs ? '<p style="margin-top:4px;font-size:0.88rem;">' + a.obs + '</p>' : '') +
+      '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ===== AGENDAMENTOS =====
+function salvarAgendamento() {
+  var clienteId = $('ag-cliente').value;
+  var data = $('ag-data').value;
+  var hora = $('ag-hora').value;
+  var procSel = $('ag-procedimento').value;
+  var procedimento = procSel === '__outro__' ? $('ag-procedimento-outro').value.trim() : procSel;
+  var valor = $('ag-valor').value;
+  var pagamento = $('ag-pagamento').value;
+  var statusPag = $('ag-status-pag').value;
+  var obs = $('ag-obs').value.trim();
+  if (!clienteId || !data || !procedimento) { alert('Preencha cliente, data e procedimento!'); return; }
+  agendamentos.push({ id: uid(), clienteId: clienteId, data: data, hora: hora, procedimento: procedimento, valor: valor, pagamento: pagamento, statusPag: statusPag, obs: obs, status: 'agendado' });
+  salvar();
+  $('ag-data').value = '';
+  $('ag-hora').value = '';
+  $('ag-procedimento').value = '';
+  $('ag-procedimento-outro').value = '';
+  $('ag-procedimento-outro-grupo').style.display = 'none';
+  $('ag-valor').value = '';
+  $('ag-pagamento').value = '';
+  $('ag-status-pag').value = 'pendente';
+  $('ag-obs').value = '';
+  $('ag-cliente').value = '';
+  renderAgenda();
+  renderDashboard();
+  alert('Agendamento criado! 📅');
+}
+
+function renderAgenda() {
+  var el = $('agenda-lista');
+  var hoje = hojeISO();
+  var todos = [];
+  agendamentos.forEach(function(a) {
+    todos.push({ tipo: 'agendamento', id: a.id, data: a.data, hora: a.hora || '', clienteId: a.clienteId, nome: a.procedimento, valor: a.valor, pagamento: a.pagamento, statusPag: a.statusPag || 'pendente', status: a.status || 'agendado', obs: a.obs });
+  });
+  procedimentos.forEach(function(p) {
+    var st = p.data >= hoje ? 'agendado' : 'realizado';
+    todos.push({ tipo: 'procedimento', id: p.id, data: p.data, hora: '', clienteId: p.clienteId, nome: p.nome, valor: p.valor, pagamento: p.pagamento, statusPag: p.statusPag || 'pendente', status: st, obs: p.obs });
+  });
+  todos.sort(function(a,b) { return (a.data + a.hora).localeCompare(b.data + b.hora); });
+
+  var filtrados = todos.filter(function(a) {
+    var st = a.status;
+    if (filtroAgenda === 'hoje') return a.data === hoje && st !== 'cancelado';
+    if (filtroAgenda === 'proximos') return st !== 'cancelado' && st !== 'realizado' && st !== 'faltou';
+    if (filtroAgenda === 'todos') return true;
+    if (filtroAgenda === 'semana') {
+      var d = new Date(a.data + 'T00:00:00');
+      var agora = new Date(hoje + 'T00:00:00');
+      var diff = (d - agora) / (1000*60*60*24);
+      return diff >= 0 && diff <= 7 && st !== 'cancelado';
+    }
+    if (filtroAgenda === 'mes') {
+      var p = a.data.split('-');
+      var h = hoje.split('-');
+      return p[0] === h[0] && p[1] === h[1];
+    }
+    return true;
+  });
+
+  if (!filtrados.length) { el.innerHTML = '<div class="empty-msg">Nenhum item neste filtro</div>'; return; }
+  var html = '';
+  filtrados.forEach(function(a) {
+    var c = clientes.find(function(x){ return x.id === a.clienteId; });
+    var futuro = a.data >= hoje;
+    var celCliente = c ? c.celular : '';
+    var st = a.status;
+    var atrasado = !futuro && st === 'agendado';
+    var stBadge = st === 'realizado' ? 'green' : (st === 'faltou' ? 'gray' : (st === 'cancelado' ? 'red' : (atrasado ? 'red' : (futuro ? 'green' : 'gray'))));
+    var stLabel = st === 'realizado' ? '✅ Realizado' : (st === 'faltou' ? '❌ Faltou' : (st === 'cancelado' ? '🚫 Cancelado' : (atrasado ? '⚠️ Atrasado' : (futuro ? '📅 Agendado' : '⏳ Passou'))));
+    var isHoje = a.data === hoje;
+    var stPag = a.statusPag;
+    var pagBadge = stPag === 'pago' ? '<span class="badge green">✅ Pago</span>' : '<span class="badge yellow">⏳ Pendente</span>';
+
+    var classeItem = atrasado ? 'atrasado' : (futuro && st === 'agendado' ? 'future' : 'past');
+    html += '<div class="appointment-item ' + classeItem + '">' +
+      '<div class="item-header"><span class="item-date">' + formatarData(a.data) + (a.hora ? ' ' + a.hora : '') +
+      (isHoje ? '<span class="hoje-badge">HOJE</span>' : '') + '</span>' +
+      '<span class="badge ' + stBadge + '">' + stLabel + '</span></div>' +
+      '<strong>' + (c ? c.nome : '(removida)') + '</strong> — ' + a.nome + ' ' + pagBadge +
+      (a.valor ? ' <span class="badge green">' + formatarDinheiro(a.valor) + '</span>' : '') +
+      (a.pagamento ? ' <span class="badge blue">' + a.pagamento + '</span>' : '') +
+      (a.obs ? '<p style="margin-top:4px;font-size:0.88rem;">' + a.obs + '</p>' : '') +
+      '<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' +
+      (a.tipo === 'agendamento' && st === 'agendado' && a.data <= hoje ? '<button class="btn green small" data-realizar="' + a.id + '" type="button">✅ Realizado</button>' : '') +
+      (a.tipo === 'agendamento' && st === 'agendado' && a.data <= hoje ? '<button class="btn gray small" data-faltou="' + a.id + '" type="button">❌ Faltou</button>' : '') +
+      (a.tipo === 'agendamento' ? '<button class="btn blue small" data-editag="' + a.id + '" type="button">✏️</button>' : '') +
+      (a.tipo === 'agendamento' ? '<button class="btn yellow small" data-duplicar="' + a.id + '" type="button">📋</button>' : '') +
+      (a.tipo === 'procedimento' ? '<button class="btn blue small" data-editprocag="' + a.id + '" type="button">✏️</button>' : '') +
+      (stPag === 'pendente' ? '<button class="btn green small" data-marcar-pago="' + a.tipo + '|' + a.id + '" type="button">💰 Marcar Pago</button>' : '<button class="btn yellow small" data-marcar-pend="' + a.tipo + '|' + a.id + '" type="button">⏳ Marcar Pendente</button>') +
+      (a.tipo === 'agendamento' && st === 'agendado' ? '<button class="btn gray small" data-cancelar="' + a.id + '" type="button">🚫</button>' : '') +
+      (celCliente ? '<button class="btn green small" data-wa="' + a.tipo + '|' + a.id + '" type="button" title="WhatsApp">💬</button>' : '') +
+      '<button class="btn small danger" data-excluir="' + a.tipo + '|' + a.id + '" type="button">🗑</button>' +
+      '</div>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+  bindAgendaBotoes(el);
+}
+
+function bindAgendaBotoes(el) {
+  var els = el.querySelectorAll('[data-realizar]');
+  for (var r = 0; r < els.length; r++) {
+    els[r].addEventListener('click', function() { marcarRealizado(this.getAttribute('data-realizar')); });
+  }
+  els = el.querySelectorAll('[data-faltou]');
+  for (var f = 0; f < els.length; f++) {
+    els[f].addEventListener('click', function() { marcarFaltou(this.getAttribute('data-faltou')); });
+  }
+  els = el.querySelectorAll('[data-editag]');
+  for (var e = 0; e < els.length; e++) {
+    els[e].addEventListener('click', function() { abrirEditarAgendamento(this.getAttribute('data-editag')); });
+  }
+  els = el.querySelectorAll('[data-editprocag]');
+  for (var ep = 0; ep < els.length; ep++) {
+    els[ep].addEventListener('click', function() { abrirEditarProcedimento(this.getAttribute('data-editprocag')); });
+  }
+  els = el.querySelectorAll('[data-duplicar]');
+  for (var d = 0; d < els.length; d++) {
+    els[d].addEventListener('click', function() { duplicarAgendamento(this.getAttribute('data-duplicar')); });
+  }
+  els = el.querySelectorAll('[data-cancelar]');
+  for (var cc = 0; cc < els.length; cc++) {
+    els[cc].addEventListener('click', function() { cancelarAgendamento(this.getAttribute('data-cancelar')); });
+  }
+  els = el.querySelectorAll('[data-marcar-pago]');
+  for (var mp = 0; mp < els.length; mp++) {
+    els[mp].addEventListener('click', function() { marcarPagamento(this.getAttribute('data-marcar-pago'), 'pago'); });
+  }
+  els = el.querySelectorAll('[data-marcar-pend]');
+  for (var mpe = 0; mpe < els.length; mpe++) {
+    els[mpe].addEventListener('click', function() { marcarPagamento(this.getAttribute('data-marcar-pend'), 'pendente'); });
+  }
+  els = el.querySelectorAll('[data-excluir]');
+  for (var ex = 0; ex < els.length; ex++) {
+    els[ex].addEventListener('click', function() {
+      var partes = this.getAttribute('data-excluir').split('|');
+      if (partes[0] === 'agendamento') excluirAgendamento(partes[1]);
+      else excluirProcedimento(partes[1]);
+    });
+  }
+  els = el.querySelectorAll('[data-wa]');
+  for (var k = 0; k < els.length; k++) {
+    els[k].addEventListener('click', function() {
+      var partes = this.getAttribute('data-wa').split('|');
+      var tipo = partes[0];
+      var id = partes[1];
+      var obj = tipo === 'agendamento' ? agendamentos.find(function(x){ return x.id === id; }) : procedimentos.find(function(x){ return x.id === id; });
+      if (!obj) return;
+      var c = clientes.find(function(x){ return x.id === obj.clienteId; });
+      if (!c) { alert('Cliente não encontrada.'); return; }
+      if (!c.celular || c.celular.replace(/\D/g,'').length === 0) { alert('Cliente sem celular cadastrado.'); return; }
+      var msg;
+      if (tipo === 'agendamento') {
+        msg = 'Olá ' + c.nome + '! 💖\n\nPassando para confirmar seu agendamento:\n\n📅 Data: ' + formatarData(obj.data) + (obj.hora ? ' às ' + obj.hora : '') + '\n✨ Procedimento: ' + obj.procedimento + '\n\nPodemos confirmar? 😊';
+      } else {
+        msg = 'Olá ' + c.nome + '! 💖\n\nPassando para lembrar do seu procedimento:\n\n📅 Data: ' + formatarData(obj.data) + '\n✨ Procedimento: ' + obj.nome;
+        if ((obj.statusPag || 'pendente') === 'pendente' && obj.valor) {
+          msg += '\n💰 Valor: ' + formatarDinheiro(obj.valor) + '\n\nO pagamento está pendente, quando puder me avise! 😊';
+        }
+      }
+      abrirWhatsApp(c.celular, msg);
+    });
+  }
+}
+
+function marcarPagamento(chave, novoStatus) {
+  var partes = chave.split('|');
+  var tipo = partes[0];
+  var id = partes[1];
+  if (tipo === 'agendamento') {
+    var a = agendamentos.find(function(x){ return x.id === id; });
+    if (a) {
+      a.statusPag = novoStatus;
+      procedimentos.forEach(function(p) {
+        if (p.agendamentoId === a.id) p.statusPag = novoStatus;
+      });
+    }
+  } else {
+    var p = procedimentos.find(function(x){ return x.id === id; });
+    if (p) {
+      p.statusPag = novoStatus;
+      if (p.agendamentoId) {
+        var ag = agendamentos.find(function(x){ return x.id === p.agendamentoId; });
+        if (ag) ag.statusPag = novoStatus;
+      }
+    }
+  }
+  salvar();
+  renderAgenda();
+  renderFinanceiro();
+  renderDashboard();
+}
+
+function excluirAgendamento(id) {
+  if (!confirm('Excluir este agendamento?')) return;
+  agendamentos = agendamentos.filter(function(a){ return a.id !== id; });
+  salvar();
+  renderAgenda();
+  renderDashboard();
+  renderFinanceiro();
+}
+
+function marcarRealizado(id) {
+  var a = agendamentos.find(function(x){ return x.id === id; });
+  if (!a) return;
+  if (!confirm('Marcar como REALIZADO?\n\nO procedimento será registrado no histórico da cliente.')) return;
+  a.status = 'realizado';
+  var statusPag = a.statusPag || 'pendente';
+  procedimentos.push({ id: uid(), agendamentoId: a.id, clienteId: a.clienteId, data: a.data, nome: a.procedimento, valor: a.valor, pagamento: a.pagamento, statusPag: statusPag, obs: a.obs });
+  salvar();
+  renderAgenda();
+  renderDashboard();
+  renderFinanceiro();
+  var msg = statusPag === 'pago' ? 'Realizado e pago! ✅' : 'Realizado! (Pagamento pendente ⏳)';
+  alert(msg);
+}
+
+function marcarFaltou(id) {
+  var a = agendamentos.find(function(x){ return x.id === id; });
+  if (!a) return;
+  if (!confirm('Marcar como FALTOU?')) return;
+  a.status = 'faltou';
+  salvar();
+  renderAgenda();
+  renderDashboard();
+}
+
+function cancelarAgendamento(id) {
+  var a = agendamentos.find(function(x){ return x.id === id; });
+  if (!a) return;
+  if (!confirm('Cancelar este agendamento?')) return;
+  a.status = 'cancelado';
+  salvar();
+  renderAgenda();
+  renderDashboard();
+}
+
+function duplicarAgendamento(id) {
+  var a = agendamentos.find(function(x){ return x.id === id; });
+  if (!a) return;
+  var novaData = prompt('Duplicar.\n\nNova data (AAAA-MM-DD):', a.data);
+  if (!novaData) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(novaData)) { alert('Data inválida!'); return; }
+  var novaHora = prompt('Nova hora (HH:MM) — deixe vazio se não tiver:', a.hora || '');
+  if (novaHora === null) novaHora = '';
+  agendamentos.push({ id: uid(), clienteId: a.clienteId, data: novaData, hora: novaHora, procedimento: a.procedimento, valor: a.valor, pagamento: a.pagamento, statusPag: 'pendente', obs: a.obs, status: 'agendado' });
+  salvar();
+  renderAgenda();
+  renderDashboard();
+  alert('Duplicado! 📋');
+}
+
+function abrirEditarAgendamento(id) {
+  agEditandoId = id;
+  var a = agendamentos.find(function(x){ return x.id === id; });
+  if (!a) return;
+  var sel = $('editag-cliente');
+  var html = '';
+  clientes.slice().sort(function(x,y){ return x.nome.localeCompare(y.nome); }).forEach(function(c) {
+    html += '<option value="' + c.id + '">' + c.nome + '</option>';
+  });
+  sel.innerHTML = html;
+  sel.value = a.clienteId;
+  $('editag-data').value = a.data || '';
+  $('editag-hora').value = a.hora || '';
+  $('editag-procedimento').value = a.procedimento || '';
+  $('editag-valor').value = a.valor || '';
+  $('editag-pagamento').value = a.pagamento || '';
+  $('editag-status-pag').value = a.statusPag || 'pendente';
+  $('editag-obs').value = a.obs || '';
+  $('modal-editar-ag').classList.add('active');
+}
+
+function salvarEditarAgendamento() {
+  var a = agendamentos.find(function(x){ return x.id === agEditandoId; });
+  if (!a) return;
+  var clienteId = $('editag-cliente').value;
+  var data = $('editag-data').value;
+  var procedimento = $('editag-procedimento').value.trim();
+  if (!clienteId || !data || !procedimento) { alert('Preencha tudo!'); return; }
+  a.clienteId = clienteId;
+  a.data = data;
+  a.hora = $('editag-hora').value;
+  a.procedimento = procedimento;
+  a.valor = $('editag-valor').value;
+  a.pagamento = $('editag-pagamento').value;
+  a.statusPag = $('editag-status-pag').value;
+  a.obs = $('editag-obs').value.trim();
+  procedimentos.forEach(function(p) {
+    if (p.agendamentoId === a.id) p.statusPag = a.statusPag;
+  });
+  salvar();
+  $('modal-editar-ag').classList.remove('active');
+  agEditandoId = null;
+  renderAgenda();
+  renderDashboard();
+  renderFinanceiro();
+  alert('Atualizado! ✅');
+}
+
+
+// ===== CÁLCULO DE RETORNO =====
+function calcularRetornos() {
+  var hoje = hojeISO();
+  var retornosAtrasados = [];
+  catalogoProcedimentos.filter(function(p){ return p.dias > 0; }).forEach(function(proc) {
+    var clientesComHist = {};
+    procedimentos.forEach(function(p) {
+      if (p.nome === proc.nome && p.clienteId) {
+        if (!clientesComHist[p.clienteId] || p.data > clientesComHist[p.clienteId]) {
+          clientesComHist[p.clienteId] = p.data;
+        }
+      }
+    });
+    agendamentos.forEach(function(a) {
+      if (a.procedimento === proc.nome && a.clienteId && a.status === 'realizado') {
+        if (!clientesComHist[a.clienteId] || a.data > clientesComHist[a.clienteId]) {
+          clientesComHist[a.clienteId] = a.data;
+        }
+      }
+    });
+    Object.keys(clientesComHist).forEach(function(cliId) {
+      var ultimaData = clientesComHist[cliId];
+      var retornoData = somarDias(ultimaData, proc.dias);
+      if (retornoData < hoje) {
+        var atraso = diasEntre(retornoData, hoje);
+        var cli = clientes.find(function(x){ return x.id === cliId; });
+        if (cli) {
+          retornosAtrasados.push({
+            clienteId: cliId,
+            clienteNome: cli.nome,
+            procedimento: proc.nome,
+            ultimaData: ultimaData,
+            retornoData: retornoData,
+            diasAtraso: atraso
+          });
+        }
+      }
+    });
+  });
+  return retornosAtrasados;
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  var hoje = hojeISO();
+  var todosFuturos = [];
+  agendamentos.forEach(function(a){
+    var st = a.status || 'agendado';
+    if (a.data >= hoje && st === 'agendado') {
+      todosFuturos.push({ tipo: 'agendamento', data: a.data, hora: a.hora || '', obj: a });
+    }
+  });
+  procedimentos.forEach(function(p){
+    if (p.data >= hoje) {
+      todosFuturos.push({ tipo: 'procedimento', data: p.data, hora: '', obj: p });
+    }
+  });
+
+  var retornos = calcularRetornos();
+  var alertasRet = $('alertas-retornos');
+  if (alertasRet && retornos.length) {
+    alertasRet.innerHTML = '<div class="alert-box clickable" style="background:#f0f4f8;border-left-color:#6a8fc7;" id="alerta-retornos"><strong style="color:#4a6fa7;">💅 ' + retornos.length + ' cliente(s) com retorno atrasado:</strong><br>Toque para ver a lista</div>';
+    $('alerta-retornos').addEventListener('click', function(){
+      filtroMassa = 'retorno';
+      filtroRetorno = 'precisam';
+      switchTab('mensagens');
+      var btns = document.querySelectorAll('.filter-btn[data-massa]');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.remove('active');
+        if (btns[i].getAttribute('data-massa') === 'retorno') btns[i].classList.add('active');
+      }
+      $('massa-filtro-retorno').style.display = 'block';
+      if (retornos.length > 0) {
+        $('massa-retorno-proc').value = retornos[0].procedimento;
+      }
+      renderMassaLista();
+    });
+  } else if (alertasRet) {
+    alertasRet.innerHTML = '';
+  }
+
+  var atrasados = agendamentos.filter(function(a){
+    var st = a.status || 'agendado';
+    return a.data < hoje && st === 'agendado';
+  });
+  var alertasAtras = $('alertas-atrasados');
+  if (atrasados.length) {
+    alertasAtras.innerHTML = '<div class="alert-box clickable" style="background:#ffe0e4;border-left-color:#c94a5c;" id="alerta-atrasados"><strong style="color:#a83a4a;">⚠️ ' + atrasados.length + ' agendamento(s) atrasado(s):</strong><br>Toque para resolver na Agenda</div>';
+    $('alerta-atrasados').addEventListener('click', function(){ switchTab('agenda'); });
+  } else {
+    alertasAtras.innerHTML = '';
+  }
+
+  var doDia = [];
+  agendamentos.forEach(function(a){
+    var st = a.status || 'agendado';
+    if (a.data === hoje && st !== 'cancelado') doDia.push({ tipo: 'agendamento', obj: a });
+  });
+  procedimentos.forEach(function(p){
+    if (p.data === hoje) doDia.push({ tipo: 'procedimento', obj: p });
+  });
+
+  var alertas = $('alertas-hoje');
+  if (doDia.length) {
+    var nomes = doDia.map(function(item){
+      var a = item.obj;
+      var c = clientes.find(function(x){ return x.id === a.clienteId; });
+      var nomeProc = item.tipo === 'agendamento' ? a.procedimento : a.nome;
+      return (c ? c.nome : '?') + (a.hora ? ' (' + a.hora + ')' : '') + ' — ' + nomeProc;
+    }).join('<br>');
+    alertas.innerHTML = '<div class="alert-box"><strong>📌 ' + doDia.length + ' item(ns) hoje:</strong><br>' + nomes + '</div>';
+  } else {
+    alertas.innerHTML = '';
+  }
+
+  var hojeMesDia = hoje.substring(5);
+  var anivHoje = clientes.filter(function(c){ return c.aniversario && c.aniversario.substring(5) === hojeMesDia; });
+  var anivEl = $('alertas-aniv');
+  if (anivHoje.length) {
+    anivEl.innerHTML = '<div class="alert-box" style="background:#ffe8f0;border-left-color:#e05a8a;"><strong style="color:#c03468;">🎂 Aniversariante(s) hoje:</strong><br>' + anivHoje.map(function(c){ return c.nome; }).join(', ') + '</div>';
+  } else {
+    anivEl.innerHTML = '';
+  }
+
+  var stats = $('stats-container');
+  if (stats) stats.innerHTML =
+    '<div class="stat-card"><div class="num">' + clientes.length + '</div><div class="label">Clientes</div></div>' +
+    '<div class="stat-card"><div class="num">' + procedimentos.length + '</div><div class="label">Procedimentos</div></div>' +
+    '<div class="stat-card"><div class="num">' + todosFuturos.length + '</div><div class="label">Futuros</div></div>' +
+    '<div class="stat-card"><div class="num">' + agendamentos.length + '</div><div class="label">Total Agenda</div></div>';
+
+  var mesAtual = hoje.substring(0, 7);
+  var totalMes = 0;
+  procedimentos.forEach(function(p){ if (p.data && p.data.substring(0,7) === mesAtual) totalMes += parseFloat(p.valor) || 0; });
+
+  var fatEl = $('faturamento-mes');
+  if (fatEl) {
+    if (totalMes > 0) {
+      var porPagamento = {};
+      procedimentos.forEach(function(p){
+        if (!p.valor || !p.data || p.data.substring(0,7) !== mesAtual) return;
+        var key = p.pagamento || 'Não informado';
+        porPagamento[key] = (porPagamento[key] || 0) + parseFloat(p.valor);
+      });
+      var detalhe = '';
+      Object.keys(porPagamento).sort().forEach(function(k) {
+        detalhe += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0d9e3;font-size:0.9rem;"><span>' + k + '</span><strong>' + formatarDinheiro(porPagamento[k]) + '</strong></div>';
+      });
+      fatEl.innerHTML = '<div class="stat-card" style="text-align:left;padding:15px;">' +
+        '<div class="num" style="font-size:1.8rem;">' + formatarDinheiro(totalMes) + '</div>' +
+        '<div class="label" style="margin-bottom:10px;">Total em ' + mesAtual.split('-')[1] + '/' + mesAtual.split('-')[0] + '</div>' +
+        detalhe + '</div>';
+    } else {
+      fatEl.innerHTML = '<div class="empty-msg">Nenhum procedimento com valor este mês</div>';
+    }
+  }
+
+  todosFuturos.sort(function(a,b){ return (a.data + a.hora).localeCompare(b.data + b.hora); });
+  var proximos = todosFuturos.slice(0, 5);
+  var el = $('proximos-agendamentos');
+  if (!proximos.length) { el.innerHTML = '<div class="empty-msg">Nenhum agendamento futuro</div>'; return; }
+  var html = '';
+  proximos.forEach(function(item) {
+    var a = item.obj;
+    var c = clientes.find(function(x){ return x.id === a.clienteId; });
+    var nomeProc = item.tipo === 'agendamento' ? a.procedimento : a.nome;
+    var stPag = a.statusPag || 'pendente';
+    var pagBadge = stPag === 'pago' ? '<span class="badge green">✅ Pago</span>' : '<span class="badge yellow">⏳ Pendente</span>';
+    var attr = item.tipo === 'agendamento' ? 'data-editagdash' : 'data-editprocdash';
+    var tipoLabel = item.tipo === 'procedimento' ? ' <span class="badge dark">📋 Procedimento</span>' : '';
+    html += '<div class="appointment-item future clickable" ' + attr + '="' + a.id + '">' +
+      '<div class="item-header"><span class="item-date">' + formatarData(a.data) + (a.hora ? ' ' + a.hora : '') + '</span>' + pagBadge + '</div>' +
+      '<strong>' + (c ? c.nome : '?') + '</strong> — ' + nomeProc + tipoLabel +
+      (a.valor ? ' <span class="badge green">' + formatarDinheiro(a.valor) + '</span>' : '') +
+      '</div>';
+  });
+  el.innerHTML = html;
+
+  var cardsAg = el.querySelectorAll('[data-editagdash]');
+  for (var i = 0; i < cardsAg.length; i++) {
+    cardsAg[i].addEventListener('click', function() { abrirEditarAgendamento(this.getAttribute('data-editagdash')); });
+  }
+  var cardsProc = el.querySelectorAll('[data-editprocdash]');
+  for (var j = 0; j < cardsProc.length; j++) {
+    cardsProc[j].addEventListener('click', function() { abrirEditarProcedimento(this.getAttribute('data-editprocdash')); });
+  }
+}
+
+// ===== ANIVERSÁRIOS =====
+function getTextoParabens() {
+  var t = mensagens.find(function(m){ return m.titulo === 'Parabéns!'; });
+  if (t) return t.conteudo;
+  return 'Feliz aniversário, {nome}! 🎂🎉\n\nQue seu dia seja tão especial quanto você! 💖\n\nCom carinho, obrigada por confiar em mim! 💐';
+}
+
+function renderAniversarios() {
+  var el = $('aniversarios-lista');
+  var mesAtual = new Date().getMonth() + 1;
+  var comAniv = clientes.filter(function(c){ return c.aniversario; });
+  if (!comAniv.length) { el.innerHTML = '<div class="empty-msg">Nenhuma cliente com aniversário cadastrado</div>'; return; }
+  var doMes = comAniv.filter(function(c){ return parseInt(c.aniversario.split('-')[1], 10) === mesAtual; }).sort(function(a,b){ return a.aniversario.split('-')[2].localeCompare(b.aniversario.split('-')[2]); });
+  var outros = comAniv.filter(function(c){ return parseInt(c.aniversario.split('-')[1], 10) !== mesAtual; }).sort(function(a,b){ return parseInt(a.aniversario.split('-')[1],10) - parseInt(b.aniversario.split('-')[1],10); });
+  var html = '';
+  if (doMes.length) { html += '<h3>🌸 Aniversariantes deste mês</h3>'; doMes.forEach(function(c){ html += renderAnivCard(c, true); }); }
+  if (outros.length) { html += '<h3>Próximos meses</h3>'; outros.forEach(function(c){ html += renderAnivCard(c, false); }); }
+  el.innerHTML = html;
+  var btnsWa = el.querySelectorAll('[data-aniv-wa]');
+  for (var i = 0; i < btnsWa.length; i++) {
+    btnsWa[i].addEventListener('click', function(e) {
+      e.stopPropagation();
+      var idCli = this.getAttribute('data-aniv-wa');
+      var c = clientes.find(function(x){ return x.id === idCli; });
+      if (!c) return;
+      var msg = getTextoParabens().replace(/\{nome\}/g, c.nome);
+      abrirWhatsApp(c.celular, msg);
+    });
+  }
+  var cards = el.querySelectorAll('[data-aniv]');
+  for (var j = 0; j < cards.length; j++) {
+    cards[j].addEventListener('click', function() { abrirCliente(this.getAttribute('data-aniv')); });
+  }
+}
+
+function renderAnivCard(c, destaque) {
+  var dia = c.aniversario.split('-')[2];
+  var mes = c.aniversario.split('-')[1];
+  var temCel = c.celular && c.celular.replace(/\D/g,'').length > 0;
+  return '<div class="appointment-item ' + (destaque ? 'future' : '') + '" data-aniv="' + c.id + '" style="cursor:pointer;">' +
+    '<div class="item-header"><span class="item-date">🎂 ' + dia + '/' + mes + '</span>' + (destaque ? '<span class="badge green">Este mês</span>' : '') + '</div>' +
+    '<strong>' + c.nome + '</strong><p style="font-size:0.88rem;">📱 ' + (c.celular || '—') + '</p>' +
+    (destaque && temCel ? '<div class="aniv-actions"><button class="btn green small" data-aniv-wa="' + c.id + '" type="button">💬 Enviar Parabéns</button></div>' : '') +
+    '</div>';
+}
+
+// ===== FINANCEIRO =====
+function calcularPeriodoFin() {
+  var de = $('fin-de').value;
+  var ate = $('fin-ate').value;
+  if (de && ate) return { de: de, ate: ate };
+  var hoje = hojeISO();
+  var ano = parseInt(hoje.substring(0,4), 10);
+  var mes = parseInt(hoje.substring(5,7), 10);
+  if (filtroFin === 'mes') return { de: hoje.substring(0,7) + '-01', ate: hoje };
+  if (filtroFin === 'mes-passado') {
+    var m = mes - 1; var a = ano;
+    if (m === 0) { m = 12; a = ano - 1; }
+    var mm = String(m).padStart(2,'0');
+    var ultimo = new Date(a, m, 0).getDate();
+    return { de: a + '-' + mm + '-01', ate: a + '-' + mm + '-' + String(ultimo).padStart(2,'0') };
+  }
+  if (filtroFin === '3meses') { var d = new Date(); d.setMonth(d.getMonth() - 3); return { de: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-01', ate: hoje }; }
+  if (filtroFin === 'ano') return { de: ano + '-01-01', ate: hoje };
+  return { de: '2000-01-01', ate: '2099-12-31' };
+}
+
+function renderFinanceiro() {
+  var el = $('fin-resultado');
+  if (!el) return;
+  var per = calcularPeriodoFin();
+  var filtroCliente = $('fin-cliente') ? $('fin-cliente').value : '';
+
+  var itens = [];
+  var pendentesLista = [];
+  procedimentos.forEach(function(p) {
+    if (p.data >= per.de && p.data <= per.ate) {
+      if (filtroCliente && p.clienteId !== filtroCliente) return;
+      var item = { data: p.data, nome: p.nome, valor: parseFloat(p.valor) || 0, pagamento: p.pagamento || 'Não informado', statusPag: p.statusPag || 'pendente', clienteId: p.clienteId, id: p.id };
+      itens.push(item);
+      if (item.statusPag === 'pendente') pendentesLista.push(item);
+    }
+  });
+
+  var aReceberLista = [];
+  var atrasadosLista = [];
+  agendamentos.forEach(function(a) {
+    var st = a.status || 'agendado';
+    if (st === 'cancelado' || st === 'realizado' || st === 'faltou') return;
+    if (filtroCliente && a.clienteId !== filtroCliente) return;
+    if (a.data < hojeISO()) {
+      if (a.data >= per.de && a.data <= per.ate) {
+        atrasadosLista.push({ data: a.data, nome: a.procedimento, valor: parseFloat(a.valor) || 0, clienteId: a.clienteId, id: a.id });
+      }
+      return;
+    }
+    if (!(a.data >= per.de && a.data <= per.ate)) return;
+    if ((a.statusPag || 'pendente') === 'pago') return;
+    aReceberLista.push({ data: a.data, nome: a.procedimento, valor: parseFloat(a.valor) || 0, clienteId: a.clienteId, id: a.id });
+  });
+
+  var totalRecebido = 0, totalPendente = 0, totalAReceber = 0, totalAtrasado = 0;
+  var porPag = {}, porProc = {}, porCli = {}, porDia = {};
+
+  itens.forEach(function(it) {
+    totalRecebido += it.valor;
+    if (it.statusPag === 'pendente') totalPendente += it.valor;
+    porPag[it.pagamento] = (porPag[it.pagamento] || 0) + it.valor;
+    porProc[it.nome] = porProc[it.nome] || { valor: 0, qtd: 0 };
+    porProc[it.nome].valor += it.valor;
+    porProc[it.nome].qtd += 1;
+    var cNome = '?';
+    var c = clientes.find(function(x){ return x.id === it.clienteId; });
+    if (c) cNome = c.nome;
+    porCli[cNome] = porCli[cNome] || { valor: 0, qtd: 0 };
+    porCli[cNome].valor += it.valor;
+    porCli[cNome].qtd += 1;
+    porDia[it.data] = (porDia[it.data] || 0) + it.valor;
+  });
+  aReceberLista.forEach(function(a){ totalAReceber += a.valor; });
+  atrasadosLista.forEach(function(a){ totalAtrasado += a.valor; });
+
+  var ticket = itens.length ? totalRecebido / itens.length : 0;
+
+  var html = '';
+  html += '<div class="fin-total"><div class="valor">' + formatarDinheiro(totalRecebido) + '</div>' +
+    '<div class="info">💰 Recebido • ' + itens.length + ' procedimento(s) • ' + formatarData(per.de) + ' a ' + formatarData(per.ate) + '</div></div>';
+
+  if (totalAtrasado > 0) {
+    html += '<div class="fin-total atrasado clicavel" id="card-atrasado"><div class="valor" style="font-size:1.6rem;">' + formatarDinheiro(totalAtrasado) + '</div><div class="info">⚠️ Atrasado • ' + atrasadosLista.length + ' agendamento(s) sem baixa</div><div class="clique">👆 Toque para resolver</div></div>';
+  }
+  if (totalPendente > 0) {
+    html += '<div class="fin-total pendente clicavel" id="card-pendente"><div class="valor" style="font-size:1.6rem;">' + formatarDinheiro(totalPendente) + '</div><div class="info">⏳ Pendente • ' + pendentesLista.length + ' item(ns)</div><div class="clique">👆 Toque para ver quem deve</div></div>';
+  }
+  if (totalAReceber > 0) {
+    html += '<div class="fin-total receber clicavel" id="card-receber"><div class="valor" style="font-size:1.6rem;">' + formatarDinheiro(totalAReceber) + '</div><div class="info">📅 A Receber • ' + aReceberLista.length + ' agendamento(s) futuro(s) não pago(s)</div><div class="clique">👆 Toque para ver a lista</div></div>';
+  }
+
+  html += '<div class="fin-cards">' +
+    '<div class="fin-mini-card"><div class="n">' + itens.length + '</div><div class="l">Procedimentos</div></div>' +
+    '<div class="fin-mini-card"><div class="n">' + formatarDinheiro(ticket) + '</div><div class="l">Ticket Médio</div></div>' +
+    '</div>';
+
+  if (!itens.length && !aReceberLista.length && !atrasadosLista.length) {
+    html += '<div class="empty-msg">Nenhum dado no período selecionado</div>';
+    el.innerHTML = html;
+    return;
+  }
+
+  if (Object.keys(porPag).length) {
+    html += '<h3>💳 Por Forma de Pagamento</h3><table class="fin-tabela"><thead><tr><th>Forma</th><th>Valor</th></tr></thead><tbody>';
+    Object.keys(porPag).sort(function(a,b){ return porPag[b] - porPag[a]; }).forEach(function(k) {
+      html += '<tr><td>' + k + '</td><td>' + formatarDinheiro(porPag[k]) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  if (Object.keys(porProc).length) {
+    html += '<h3>💅 Por Procedimento</h3><table class="fin-tabela"><thead><tr><th>Procedimento</th><th>Qtd</th><th>Total</th></tr></thead><tbody>';
+    Object.keys(porProc).sort(function(a,b){ return porProc[b].valor - porProc[a].valor; }).forEach(function(k) {
+      html += '<tr><td>' + k + '</td><td>' + porProc[k].qtd + '</td><td>' + formatarDinheiro(porProc[k].valor) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  if (Object.keys(porCli).length) {
+    html += '<h3>👥 Por Cliente</h3><table class="fin-tabela"><thead><tr><th>Cliente</th><th>Qtd</th><th>Total</th></tr></thead><tbody>';
+    Object.keys(porCli).sort(function(a,b){ return porCli[b].valor - porCli[a].valor; }).forEach(function(k) {
+      html += '<tr><td>' + k + '</td><td>' + porCli[k].qtd + '</td><td>' + formatarDinheiro(porCli[k].valor) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  if (Object.keys(porDia).length) {
+    html += '<h3>📅 Por Dia</h3><table class="fin-tabela"><thead><tr><th>Data</th><th>Total</th></tr></thead><tbody>';
+    Object.keys(porDia).sort().reverse().forEach(function(k) {
+      html += '<tr><td>' + formatarData(k) + '</td><td>' + formatarDinheiro(porDia[k]) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+  }
+  el.innerHTML = html;
+
+  var cardPend = $('card-pendente');
+  if (cardPend) cardPend.addEventListener('click', function(){ abrirListaPendentes(pendentesLista); });
+  var cardRec = $('card-receber');
+  if (cardRec) cardRec.addEventListener('click', function(){ abrirListaAReceber(aReceberLista); });
+  var cardAtras = $('card-atrasado');
+  if (cardAtras) cardAtras.addEventListener('click', function(){ abrirListaAtrasados(atrasadosLista); });
+}
+
+function abrirListaAtrasados(lista) {
+  var el = $('modal-pendentes-conteudo');
+  $('modal-pendentes-titulo').textContent = '⚠️ Atrasados (' + lista.length + ')';
+  if (!lista.length) { el.innerHTML = '<div class="empty-msg">Nenhum atrasado</div>'; $('modal-lista-pendentes').classList.add('active'); return; }
+  var html = '';
+  lista.sort(function(a,b){ return a.data.localeCompare(b.data); }).forEach(function(it) {
+    var c = clientes.find(function(x){ return x.id === it.clienteId; });
+    html += '<div class="lista-pendentes-item" style="border-left-color:#c94a5c;">' +
+      '<div class="info"><strong>' + (c ? c.nome : '?') + '</strong><small>' + it.nome + ' • ' + formatarData(it.data) + ' • ' + formatarDinheiro(it.valor) + '</small></div>' +
+      '<div style="display:flex;gap:4px;flex-wrap:wrap;">' +
+      '<button class="btn green small" data-atras-realizado="' + it.id + '" type="button">✅</button>' +
+      '<button class="btn gray small" data-atras-faltou="' + it.id + '" type="button">❌</button>' +
+      '<button class="btn danger small" data-atras-excluir="' + it.id + '" type="button">🗑</button>' +
+      '</div></div>';
+  });
+  el.innerHTML = html;
+  var btns = el.querySelectorAll('[data-atras-realizado]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function() {
+      $('modal-lista-pendentes').classList.remove('active');
+      marcarRealizado(this.getAttribute('data-atras-realizado'));
+    });
+  }
+  btns = el.querySelectorAll('[data-atras-faltou]');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].addEventListener('click', function() {
+      $('modal-lista-pendentes').classList.remove('active');
+      marcarFaltou(this.getAttribute('data-atras-faltou'));
+    });
+  }
+  btns = el.querySelectorAll('[data-atras-excluir]');
+  for (var k = 0; k < btns.length; k++) {
+    btns[k].addEventListener('click', function() {
+      $('modal-lista-pendentes').classList.remove('active');
+      excluirAgendamento(this.getAttribute('data-atras-excluir'));
+    });
+  }
+  $('modal-lista-pendentes').classList.add('active');
+}
+
+function abrirListaPendentes(lista) {
+  var el = $('modal-pendentes-conteudo');
+  $('modal-pendentes-titulo').textContent = '⏳ Valores Pendentes (' + lista.length + ')';
+  if (!lista.length) { el.innerHTML = '<div class="empty-msg">Nenhum pendente</div>'; $('modal-lista-pendentes').classList.add('active'); return; }
+  var html = '';
+  lista.forEach(function(it) {
+    var c = clientes.find(function(x){ return x.id === it.clienteId; });
+    html += '<div class="lista-pendentes-item">' +
+      '<div class="info"><strong>' + (c ? c.nome : '?') + '</strong><small>' + it.nome + ' • ' + formatarData(it.data) + ' • ' + formatarDinheiro(it.valor) + '</small></div>' +
+      '<button class="btn green small" data-marcar-pago-modal="' + it.id + '" type="button">✅ Marcar Pago</button>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+  var btns = el.querySelectorAll('[data-marcar-pago-modal]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function() {
+      var id = this.getAttribute('data-marcar-pago-modal');
+      var p = procedimentos.find(function(x){ return x.id === id; });
+      if (p) {
+        p.statusPag = 'pago';
+        if (p.agendamentoId) {
+          var ag = agendamentos.find(function(x){ return x.id === p.agendamentoId; });
+          if (ag) ag.statusPag = 'pago';
+        }
+      }
+      salvar();
+      $('modal-lista-pendentes').classList.remove('active');
+      renderFinanceiro();
+      renderAgenda();
+      renderDashboard();
+      alert('Marcado como pago! ✅');
+    });
+  }
+  $('modal-lista-pendentes').classList.add('active');
+}
+
+function abrirListaAReceber(lista) {
+  var el = $('modal-pendentes-conteudo');
+  $('modal-pendentes-titulo').textContent = '📅 A Receber (' + lista.length + ')';
+  if (!lista.length) { el.innerHTML = '<div class="empty-msg">Nenhum agendamento futuro não pago</div>'; $('modal-lista-pendentes').classList.add('active'); return; }
+  var html = '';
+  lista.sort(function(a,b){ return a.data.localeCompare(b.data); }).forEach(function(it) {
+    var c = clientes.find(function(x){ return x.id === it.clienteId; });
+    html += '<div class="lista-pendentes-item" style="border-left-color:#7ab88c;">' +
+      '<div class="info"><strong>' + (c ? c.nome : '?') + '</strong><small>' + it.nome + ' • ' + formatarData(it.data) + ' • ' + formatarDinheiro(it.valor) + '</small></div>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+  $('modal-lista-pendentes').classList.add('active');
+}
+
+
+// ===== MANUTENÇÃO =====
+function verPendentes() {
+  var pendentes = procedimentos.filter(function(p){ return (p.statusPag || 'pendente') === 'pendente'; });
+  var el = $('manutencao-resultado');
+  if (!pendentes.length) { el.innerHTML = '<div class="empty-msg">Nenhum procedimento pendente ✅</div>'; return; }
+  var html = '<strong>⏳ Pendentes (' + pendentes.length + '):</strong><br><br>';
+  pendentes.forEach(function(p) {
+    var c = clientes.find(function(x){ return x.id === p.clienteId; });
+    html += '• <strong>' + (c ? c.nome : '?') + '</strong> — ' + p.nome + ' — ' + formatarDinheiro(p.valor) + ' — ' + formatarData(p.data) + '<br>';
+  });
+  el.innerHTML = html;
+}
+
+function zerarPendentes() {
+  var pendentes = procedimentos.filter(function(p){ return (p.statusPag || 'pendente') === 'pendente'; });
+  if (!pendentes.length) { alert('Não há pendentes para zerar.'); return; }
+  if (!confirm('Marcar TODOS os ' + pendentes.length + ' procedimentos pendentes como PAGOS?')) return;
+  pendentes.forEach(function(p) { p.statusPag = 'pago'; });
+  salvar();
+  renderFinanceiro();
+  renderAgenda();
+  renderDashboard();
+  verPendentes();
+  alert('Todos marcados como pagos! ✅');
+}
+
+function sincronizarPagamentos() {
+  var count = 0;
+  procedimentos.forEach(function(p) {
+    if (p.agendamentoId) {
+      var a = agendamentos.find(function(x){ return x.id === p.agendamentoId; });
+      if (a && a.statusPag !== p.statusPag) {
+        a.statusPag = p.statusPag;
+        count++;
+      }
+    }
+  });
+  salvar();
+  renderFinanceiro();
+  renderAgenda();
+  renderDashboard();
+  alert(count > 0 ? 'Sincronização: ' + count + ' ajuste(s). 🔄' : 'Tudo já sincronizado! ✅');
+}
+
+function diagnosticoAgendamentos() {
+  var el = $('manutencao-resultado');
+  if (!agendamentos.length) { el.innerHTML = '<div class="empty-msg">Nenhum agendamento</div>'; return; }
+  var hoje = hojeISO();
+  var html = '<strong>🔍 Diagnóstico (' + agendamentos.length + '):</strong><br><br>';
+  agendamentos.slice().sort(function(a,b){ return b.data.localeCompare(a.data); }).forEach(function(a) {
+    var c = clientes.find(function(x){ return x.id === a.clienteId; });
+    var st = a.status || 'agendado';
+    var stPag = a.statusPag || 'pendente';
+    var atrasado = a.data < hoje && st === 'agendado';
+    html += '<div class="diag-item" style="border-left-color:' + (atrasado ? '#c94a5c' : '#6a8fc7') + ';">' +
+      '<strong>' + (c ? c.nome : '?') + '</strong> — ' + a.procedimento + '<br>' +
+      '📅 ' + formatarData(a.data) + (a.hora ? ' ' + a.hora : '') + ' • ' +
+      'Serviço: <strong>' + st + '</strong> • Pagamento: <strong>' + stPag + '</strong>' +
+      (atrasado ? ' • <span style="color:#c94a5c;">⚠️ ATRASADO</span>' : '') +
+      '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ===== MENSAGENS =====
+function salvarTextoMsg() {
+  var titulo = $('msg-titulo').value.trim();
+  var conteudo = $('msg-conteudo').value.trim();
+  if (!titulo || !conteudo) { alert('Preencha nome e texto!'); return; }
+  mensagens.push({ id: uid(), titulo: titulo, conteudo: conteudo });
+  salvar();
+  $('msg-titulo').value = '';
+  $('msg-conteudo').value = '';
+  renderTextosMsg();
+  renderMassaTextoSelect();
+  alert('Texto salvo! 📝');
+}
+
+function renderTextosMsg() {
+  var el = $('lista-msg-textos');
+  if (!el) return;
+  if (!mensagens.length) { el.innerHTML = '<div class="empty-msg">Nenhum texto cadastrado</div>'; return; }
+  var html = '';
+  mensagens.forEach(function(m) {
+    var isParabens = m.titulo === 'Parabéns!';
+    html += '<div class="msg-card"' + (isParabens ? ' style="border-left-color:#e05a8a;"' : '') + '>' +
+      '<h4>' + m.titulo + (isParabens ? ' 🎂 (usado no aniversário)' : '') + '</h4>' +
+      '<div class="txt">' + m.conteudo + '</div>' +
+      '<button class="btn small danger" data-delmsg="' + m.id + '" type="button">🗑 Excluir</button>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+  var btns = el.querySelectorAll('[data-delmsg]');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function() {
+      var id = this.getAttribute('data-delmsg');
+      if (!confirm('Excluir este texto?')) return;
+      mensagens = mensagens.filter(function(m){ return m.id !== id; });
+      salvar();
+      renderTextosMsg();
+      renderMassaTextoSelect();
+    });
+  }
+}
+
+function renderMassaTextoSelect() {
+  var sel = $('massa-texto');
+  if (!sel) return;
+  var html = '<option value="">Selecione um texto...</option>';
+  mensagens.forEach(function(m) { html += '<option value="' + m.id + '">' + m.titulo + '</option>'; });
+  sel.innerHTML = html;
+}
+
+// ===== RETORNO =====
+function getUltimaDataClienteProc(clienteId, procNome) {
+  var ultima = null;
+  procedimentos.forEach(function(p) {
+    if (p.clienteId === clienteId && p.nome === procNome) {
+      if (!ultima || p.data > ultima) ultima = p.data;
+    }
+  });
+  agendamentos.forEach(function(a) {
+    if (a.clienteId === clienteId && a.procedimento === procNome && a.status === 'realizado') {
+      if (!ultima || a.data > ultima) ultima = a.data;
+    }
+  });
+  return ultima;
+}
+
+function renderMassaRetorno() {
+  var el = $('massa-lista');
+  var procNome = $('massa-retorno-proc').value;
+  if (!procNome) {
+    el.innerHTML = '<div class="empty-msg">Selecione um procedimento acima</div>';
+    selecionadosMassa = {};
+    atualizarBotaoMassa();
+    return;
+  }
+  var proc = catalogoProcedimentos.find(function(p){ return p.nome === procNome; });
+  if (!proc) { el.innerHTML = '<div class="empty-msg">Procedimento não encontrado</div>'; return; }
+  var hoje = hojeISO();
+  var lista = [];
+
+  if (filtroRetorno === 'precisam') {
+    clientes.forEach(function(c) {
+      var ultimaData = getUltimaDataClienteProc(c.id, procNome);
+      if (!ultimaData) return;
+      var retornoData = somarDias(ultimaData, proc.dias);
+      if (retornoData < hoje) {
+        var atraso = diasEntre(retornoData, hoje);
+        lista.push({ cliente: c, ultima: ultimaData, retorno: retornoData, atraso: atraso });
+      }
+    });
+    lista.sort(function(a,b){ return b.atraso - a.atraso; });
+  } else if (filtroRetorno === 'fizeram') {
+    clientes.forEach(function(c) {
+      var ultimaData = getUltimaDataClienteProc(c.id, procNome);
+      if (!ultimaData) return;
+      var retornoData = somarDias(ultimaData, proc.dias);
+      var atraso = retornoData < hoje ? diasEntre(retornoData, hoje) : 0;
+      lista.push({ cliente: c, ultima: ultimaData, retorno: retornoData, atraso: atraso });
+    });
+    lista.sort(function(a,b){ return b.ultima.localeCompare(a.ultima); });
+  } else if (filtroRetorno === 'nunca') {
+    clientes.forEach(function(c) {
+      var ultimaData = getUltimaDataClienteProc(c.id, procNome);
+      if (ultimaData) return;
+      lista.push({ cliente: c, ultima: null, retorno: null, atraso: 0 });
+    });
+    lista.sort(function(a,b){ return a.cliente.nome.localeCompare(b.cliente.nome); });
+  }
+
+  if (!lista.length) {
+    el.innerHTML = '<div class="empty-msg">Nenhuma cliente neste filtro</div>';
+    selecionadosMassa = {};
+    atualizarBotaoMassa();
+    return;
+  }
+
+  var html = '';
+  lista.forEach(function(item) {
+    var c = item.cliente;
+    var temCel = c.celular && c.celular.replace(/\D/g,'').length > 0;
+    var marcado = selecionadosMassa[c.id] ? ' checked' : '';
+    var infoExtra = '';
+    if (item.ultima) {
+      infoExtra = 'Última: ' + formatarData(item.ultima) + ' • Retorno: ' + formatarData(item.retorno);
+      if (item.atraso > 0) {
+        infoExtra += ' • <span style="color:#c94a5c;font-weight:600;">' + item.atraso + ' dias atrasada</span>';
+      } else {
+        infoExtra += ' • <span style="color:#7ab88c;font-weight:600;">no prazo</span>';
+      }
+    } else {
+      infoExtra = 'Nunca fez este procedimento';
+    }
+    html += '<div class="retorno-item' + (item.atraso > 0 ? ' atrasado' : '') + '" data-clickcli="' + c.id + '">' +
+      '<input type="checkbox" data-cli="' + c.id + '"' + marcado + (temCel ? '' : ' disabled') + ' style="width:22px;height:22px;flex-shrink:0;">' +
+      '<div class="info">' +
+      '<strong>' + c.nome + '</strong>' +
+      '<small>' + infoExtra + '</small>' +
+      '<small style="color:#8a6478;">📱 ' + (c.celular || 'sem celular') + '</small>' +
+      '</div></div>';
+  });
+  el.innerHTML = html;
+
+  // Pré-marcar atrasadas do filtro "precisam"
+  if (filtroRetorno === 'precisam') {
+    selecionadosMassa = {};
+    lista.forEach(function(item) {
+      if (item.atraso > 0) selecionadosMassa[item.cliente.id] = true;
+    });
+    var checks = el.querySelectorAll('input[type="checkbox"]');
+    for (var i = 0; i < checks.length; i++) {
+      checks[i].checked = !!selecionadosMassa[checks[i].getAttribute('data-cli')];
+    }
+  }
+
+  var checksAll = el.querySelectorAll('input[type="checkbox"]');
+  for (var j = 0; j < checksAll.length; j++) {
+    checksAll[j].addEventListener('change', function() {
+      var id = this.getAttribute('data-cli');
+      if (this.checked) selecionadosMassa[id] = true;
+      else delete selecionadosMassa[id];
+      atualizarBotaoMassa();
+    });
+  }
+  var itens = el.querySelectorAll('[data-clickcli]');
+  for (var k = 0; k < itens.length; k++) {
+    itens[k].addEventListener('click', function(e) {
+      if (e.target.tagName === 'INPUT') return;
+      var id = this.getAttribute('data-clickcli');
+      var check = this.querySelector('input[type="checkbox"]');
+      if (check.disabled) return;
+      check.checked = !check.checked;
+      if (check.checked) selecionadosMassa[id] = true;
+      else delete selecionadosMassa[id];
+      atualizarBotaoMassa();
+    });
+  }
+  atualizarBotaoMassa();
+}
+
+function renderMassaLista() {
+  var el = $('massa-lista');
+  if (!el) return;
+
+  if (filtroMassa === 'retorno') {
+    $('massa-filtro-retorno').style.display = 'block';
+    renderMassaRetorno();
+    return;
+  } else {
+    $('massa-filtro-retorno').style.display = 'none';
+  }
+
+  var busca = ($('busca-massa') ? $('busca-massa').value : '').toLowerCase();
+  var hoje = hojeISO();
+  var mesAtual = new Date().getMonth() + 1;
+
+  var filtrados = clientes.filter(function(c) {
+    if (busca && c.nome.toLowerCase().indexOf(busca) === -1 && (c.celular || '').indexOf(busca) === -1) return false;
+    if (filtroMassa === 'aniv-mes') {
+      if (!c.aniversario) return false;
+      return parseInt(c.aniversario.split('-')[1], 10) === mesAtual;
+    }
+    if (filtroMassa === 'com-agendamento') {
+      return agendamentos.some(function(a){
+        var st = a.status || 'agendado';
+        return a.clienteId === c.id && a.data >= hoje && st === 'agendado';
+      });
+    }
+    return true;
+  });
+
+  if (!filtrados.length) { el.innerHTML = '<div class="empty-msg">Nenhuma cliente neste filtro</div>'; atualizarBotaoMassa(); return; }
+
+  var html = '';
+  filtrados.forEach(function(c) {
+    var temCel = c.celular && c.celular.replace(/\D/g,'').length > 0;
+    var marcado = selecionadosMassa[c.id] ? ' checked' : '';
+    html += '<div class="massa-item' + (temCel ? '' : ' disabled') + '" data-clickcli="' + c.id + '">' +
+      '<input type="checkbox" data-cli="' + c.id + '"' + marcado + (temCel ? '' : ' disabled') + '>' +
+      '<div class="info"><strong>' + c.nome + '</strong><span>📱 ' + (c.celular || 'sem celular') + (temCel ? '' : ' (não pode enviar)') + '</span></div>' +
+      '</div>';
+  });
+  el.innerHTML = html;
+
+  var checks = el.querySelectorAll('input[type="checkbox"]');
+  for (var i = 0; i < checks.length; i++) {
+    checks[i].addEventListener('change', function() {
+      var id = this.getAttribute('data-cli');
+      if (this.checked) selecionadosMassa[id] = true;
+      else delete selecionadosMassa[id];
+      atualizarBotaoMassa();
+    });
+  }
+  var itens = el.querySelectorAll('[data-clickcli]');
+  for (var j = 0; j < itens.length; j++) {
+    itens[j].addEventListener('click', function(e) {
+      if (e.target.tagName === 'INPUT') return;
+      var id = this.getAttribute('data-clickcli');
+      var check = this.querySelector('input[type="checkbox"]');
+      if (check.disabled) return;
+      check.checked = !check.checked;
+      if (check.checked) selecionadosMassa[id] = true;
+      else delete selecionadosMassa[id];
+      atualizarBotaoMassa();
+    });
+  }
+  atualizarBotaoMassa();
+}
+
+function atualizarBotaoMassa() {
+  var btn = $('btn-iniciar-massa');
+  if (!btn) return;
+  var total = Object.keys(selecionadosMassa).length;
+  var sel = $('massa-texto');
+  btn.disabled = !(total > 0 && sel && sel.value);
+  btn.textContent = '🚀 Iniciar envio (' + total + ' selecionada' + (total !== 1 ? 's' : '') + ')';
+}
+
+function marcarTodasMassa(marcar) {
+  var el = $('massa-lista');
+  if (!el) return;
+  var checks = el.querySelectorAll('input[type="checkbox"]:not(:disabled)');
+  for (var i = 0; i < checks.length; i++) {
+    var id = checks[i].getAttribute('data-cli');
+    checks[i].checked = marcar;
+    if (marcar) selecionadosMassa[id] = true;
+    else delete selecionadosMassa[id];
+  }
+  if (!marcar) selecionadosMassa = {};
+  atualizarBotaoMassa();
+}
+
+function iniciarEnvioMassa() {
+  var textoId = $('massa-texto').value;
+  var msg = mensagens.find(function(m){ return m.id === textoId; });
+  if (!msg) { alert('Selecione um texto!'); return; }
+  filaMassa = [];
+  var procNome = (filtroMassa === 'retorno') ? $('massa-retorno-proc').value : null;
+  Object.keys(selecionadosMassa).forEach(function(id) {
+    var c = clientes.find(function(x){ return x.id === id; });
+    if (!c || !c.celular || c.celular.replace(/\D/g,'').length === 0) return;
+    var info = { cliente: c, proc: null, ultima: null, dias: null };
+    if (procNome) {
+      info.proc = procNome;
+      info.ultima = getUltimaDataClienteProc(c.id, procNome);
+      if (info.ultima) info.dias = diasEntre(info.ultima, hojeISO());
+    }
+    filaMassa.push(info);
+  });
+  if (!filaMassa.length) { alert('Nenhuma cliente válida.'); return; }
+  filaMassaTexto = msg.conteudo;
+  filaMassaIndex = 0;
+  renderFilaMassa();
+}
+
+function renderFilaMassa() {
+  var el = $('massa-status');
+  el.style.display = 'block';
+  if (filaMassaIndex >= filaMassa.length) {
+    el.innerHTML = '<div style="text-align:center;padding:15px;">' +
+      '<h3 style="color:#7ab88c;">✅ Concluído!</h3>' +
+      '<p>' + filaMassa.length + ' mensagem(ns) processada(s).</p>' +
+      '<button class="btn" id="btn-finalizar-massa" type="button">Fechar</button></div>';
+    $('btn-finalizar-massa').addEventListener('click', function() {
+      el.style.display = 'none';
+      filaMassa = [];
+    });
+    return;
+  }
+  var info = filaMassa[filaMassaIndex];
+  var c = info.cliente;
+  var texto = filaMassaTexto
+    .replace(/\{nome\}/g, c.nome)
+    .replace(/\{procedimento\}/g, info.proc || '')
+    .replace(/\{dias_desde\}/g, info.dias !== null ? info.dias : '')
+    .replace(/\{ultima_data\}/g, info.ultima ? formatarData(info.ultima) : '');
+
+  var html = '<h3>📤 Enviando ' + (filaMassaIndex + 1) + ' de ' + filaMassa.length + '</h3>';
+  for (var i = 0; i < filaMassa.length; i++) {
+    var icone = i < filaMassaIndex ? '✅' : (i === filaMassaIndex ? '⏳' : '⏸');
+    html += '<div class="linha"><span>' + icone + ' ' + filaMassa[i].cliente.nome + '</span><span>' + (i < filaMassaIndex ? 'enviada' : (i === filaMassaIndex ? 'atual' : 'aguardando')) + '</span></div>';
+  }
+  html += '<div style="margin-top:15px;padding:12px;background:white;border-radius:8px;font-size:0.88rem;white-space:pre-wrap;">' + texto + '</div>';
+  html += '<div style="margin-top:15px;display:flex;gap:8px;flex-wrap:wrap;">' +
+    '<button class="btn green" id="btn-abrir-wa-massa" type="button">📱 Abrir WhatsApp da ' + c.nome.split(' ')[0] + '</button>' +
+    '<button class="btn gray" id="btn-pular-massa" type="button">⏭ Pular</button>' +
+    '<button class="btn danger" id="btn-cancelar-massa" type="button">✖ Cancelar</button>' +
+    '</div>';
+  el.innerHTML = html;
+  $('btn-abrir-wa-massa').addEventListener('click', function() {
+    abrirWhatsApp(c.celular, texto);
+    filaMassaIndex++;
+    setTimeout(renderFilaMassa, 500);
+  });
+  $('btn-pular-massa').addEventListener('click', function() { filaMassaIndex++; renderFilaMassa(); });
+  $('btn-cancelar-massa').addEventListener('click', function() {
+    if (!confirm('Cancelar envio?')) return;
+    el.style.display = 'none';
+    filaMassa = [];
+  });
+}
+
+// ===== CSV =====
+function escapeCsv(v) {
+  if (v === null || v === undefined) return '';
+  var s = String(v);
+  if (s.indexOf('"') !== -1 || s.indexOf(',') !== -1 || s.indexOf('\n') !== -1 || s.indexOf(';') !== -1) {
+    return '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+function gerarCsv(linhas) {
+  return linhas.map(function(l) { return l.map(escapeCsv).join(';'); }).join('\r\n');
+}
+
+function baixarCsv(nomeArquivo, conteudo) {
+  var blob = new Blob(['\ufeff' + conteudo], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = nomeArquivo;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+function dataHoje() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function csvClientes() {
+  if (!clientes.length) { alert('Nenhum cliente'); return; }
+  var linhas = [['ID', 'Nome', 'Celular', 'Aniversario', 'Observacoes']];
+  clientes.forEach(function(c) { linhas.push([c.id, c.nome, c.celular || '', c.aniversario || '', c.obs || '']); });
+  baixarCsv('clientes-' + dataHoje() + '.csv', gerarCsv(linhas));
+}
+
+function csvAgendamentos() {
+  if (!agendamentos.length) { alert('Nenhum agendamento'); return; }
+  var linhas = [['ID', 'ClienteID', 'Cliente', 'Data', 'Hora', 'Procedimento', 'Valor', 'Pagamento', 'StatusPag', 'Status', 'Observacoes']];
+  agendamentos.forEach(function(a) {
+    var c = clientes.find(function(x){ return x.id === a.clienteId; });
+    linhas.push([a.id, a.clienteId, c ? c.nome : '', a.data, a.hora || '', a.procedimento, a.valor || '', a.pagamento || '', a.statusPag || '', a.status || '', a.obs || '']);
+  });
+  baixarCsv('agendamentos-' + dataHoje() + '.csv', gerarCsv(linhas));
+}
+
+function csvProcedimentos() {
+  if (!procedimentos.length) { alert('Nenhum procedimento'); return; }
+  var linhas = [['ID', 'AgendamentoID', 'ClienteID', 'Cliente', 'Data', 'Procedimento', 'Valor', 'Pagamento', 'StatusPag', 'Observacoes']];
+  procedimentos.forEach(function(p) {
+    var c = clientes.find(function(x){ return x.id === p.clienteId; });
+    linhas.push([p.id, p.agendamentoId || '', p.clienteId, c ? c.nome : '', p.data, p.nome, p.valor || '', p.pagamento || '', p.statusPag || '', p.obs || '']);
+  });
+  baixarCsv('procedimentos-' + dataHoje() + '.csv', gerarCsv(linhas));
+}
+
+function csvCatalogo() {
+  if (!catalogoProcedimentos.length) { alert('Catálogo vazio'); return; }
+  var linhas = [['ID', 'Nome', 'Dias', 'ValorPadrao', 'Icone', 'Ativo']];
+  catalogoProcedimentos.forEach(function(p) {
+    linhas.push([p.id, p.nome, p.dias, p.valorPadrao || '', p.icone || '', p.ativo === false ? 'Nao' : 'Sim']);
+  });
+  baixarCsv('catalogo-' + dataHoje() + '.csv', gerarCsv(linhas));
+}
+
+function csvMensagens() {
+  if (!mensagens.length) { alert('Nenhuma mensagem'); return; }
+  var linhas = [['ID', 'Titulo', 'Conteudo']];
+  mensagens.forEach(function(m) { linhas.push([m.id, m.titulo, m.conteudo]); });
+  baixarCsv('mensagens-' + dataHoje() + '.csv', gerarCsv(linhas));
+}
+
+// ===== BACKUP =====
+function exportarBackup() {
+  var dados = {
+    versao: 7,
+    exportadoEm: new Date().toISOString(),
+    clientes: clientes,
+    agendamentos: agendamentos,
+    procedimentos: procedimentos,
+    mensagens: mensagens,
+    catalogo: catalogoProcedimentos
+  };
+  var blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'crm-backup-' + dataHoje() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  alert('Backup baixado! 💾');
+}
+
+function importarBackup(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var dados = JSON.parse(e.target.result);
+      if (!dados.clientes || !Array.isArray(dados.clientes)) { alert('Arquivo inválido.'); return; }
+      var msg = 'Restaurar backup?\n\n👥 Clientes: ' + (dados.clientes || []).length + '\n📅 Agendamentos: ' + (dados.agendamentos || []).length + '\n💅 Procedimentos: ' + (dados.procedimentos || []).length + '\n📝 Mensagens: ' + (dados.mensagens || []).length + '\n💅 Catálogo: ' + (dados.catalogo || []).length + '\n\n⚠️ Isso SUBSTITUI os dados atuais.';
+      if (!confirm(msg)) return;
+      clientes = dados.clientes || [];
+      agendamentos = dados.agendamentos || [];
+      procedimentos = dados.procedimentos || [];
+      mensagens = dados.mensagens || [];
+      catalogoProcedimentos = dados.catalogo || [];
+      salvar();
+      renderDashboard();
+      renderClientes();
+      renderSelectClientes();
+      renderFinSelectClientes();
+      renderAgenda();
+      renderListaProcCat();
+      renderAniversarios();
+      renderFinanceiro();
+      renderTextosMsg();
+      renderMassaTextoSelect();
+      renderMassaLista();
+      renderInfoBackup();
+      alert('Backup restaurado! ✅');
+    } catch(err) { alert('Erro: ' + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+function renderInfoBackup() {
+  var el = $('info-backup');
+  if (!el) return;
+  el.innerHTML = '<strong>📊 Dados atuais:</strong><br>👥 ' + clientes.length + ' cliente(s)<br>📅 ' + agendamentos.length + ' agendamento(s)<br>💅 ' + procedimentos.length + ' procedimento(s)<br>💅 ' + catalogoProcedimentos.length + ' no catálogo<br>📝 ' + mensagens.length + ' texto(s)';
+}
+
+function apagarTudo() {
+  if (!confirm('⚠️ Apagar TODOS os dados?\n\nTem certeza?')) return;
+  if (!confirm('Tem CERTEZA MESMO?')) return;
+  clientes = []; agendamentos = []; procedimentos = []; mensagens = []; catalogoProcedimentos = [];
+  selecionadosMassa = {};
+  salvar();
+  renderDashboard(); renderClientes(); renderSelectClientes(); renderFinSelectClientes();
+  renderAgenda(); renderListaProcCat(); renderAniversarios(); renderFinanceiro();
+  renderTextosMsg(); renderMassaLista(); renderInfoBackup();
+  alert('Dados apagados.');
+}
+
+// ===== BIND =====
+function bind() {
+  $('btn-dashboard').addEventListener('click', function(){ switchTab('dashboard'); });
+  $('btn-clientes').addEventListener('click', function(){ switchTab('clientes'); });
+  $('btn-agenda').addEventListener('click', function(){ switchTab('agenda'); });
+  $('btn-procedimentos').addEventListener('click', function(){ switchTab('procedimentos'); });
+  $('btn-aniversarios').addEventListener('click', function(){ switchTab('aniversarios'); });
+  $('btn-financeiro').addEventListener('click', function(){ switchTab('financeiro'); });
+  $('btn-mensagens').addEventListener('click', function(){ switchTab('mensagens'); });
+  $('btn-backup').addEventListener('click', function(){ switchTab('backup'); });
+  $('btn-salvar-cliente').addEventListener('click', salvarCliente);
+  $('btn-salvar-agendamento').addEventListener('click', salvarAgendamento);
+  $('btn-salvar-edicao').addEventListener('click', salvarEdicao);
+  $('btn-fechar-modal').addEventListener('click', fecharModal);
+  $('btn-add-procedimento').addEventListener('click', adicionarProcedimento);
+  $('btn-salvar-proc-cat').addEventListener('click', salvarProcCatalogo);
+  $('busca-cliente').addEventListener('input', renderClientes);
+  $('busca-massa').addEventListener('input', renderMassaLista);
+  $('massa-retorno-proc').addEventListener('change', renderMassaRetorno);
+  $('btn-exportar').addEventListener('click', exportarBackup);
+  $('btn-importar-trigger').addEventListener('click', function(){ $('input-importar').click(); });
+  $('input-importar').addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) importarBackup(e.target.files[0]);
+    e.target.value = '';
+  });
+  $('btn-csv-clientes').addEventListener('click', csvClientes);
+  $('btn-csv-agendamentos').addEventListener('click', csvAgendamentos);
+  $('btn-csv-procedimentos').addEventListener('click', csvProcedimentos);
+  $('btn-csv-catalogo').addEventListener('click', csvCatalogo);
+  $('btn-csv-mensagens').addEventListener('click', csvMensagens);
+  $('btn-apagar-tudo').addEventListener('click', apagarTudo);
+  $('btn-ver-pendentes').addEventListener('click', verPendentes);
+  $('btn-zerar-pendentes').addEventListener('click', zerarPendentes);
+  $('btn-sincronizar').addEventListener('click', sincronizarPagamentos);
+  $('btn-diagnostico').addEventListener('click', diagnosticoAgendamentos);
+  $('btn-salvar-msg').addEventListener('click', salvarTextoMsg);
+  $('btn-iniciar-massa').addEventListener('click', iniciarEnvioMassa);
+  $('massa-texto').addEventListener('change', atualizarBotaoMassa);
+  $('btn-marcar-todas').addEventListener('click', function() { marcarTodasMassa(true); });
+  $('btn-desmarcar-todas').addEventListener('click', function() { marcarTodasMassa(false); });
+  $('btn-fechar-editar-ag').addEventListener('click', function(){ $('modal-editar-ag').classList.remove('active'); });
+  $('btn-salvar-editar-ag').addEventListener('click', salvarEditarAgendamento);
+  $('btn-fechar-editar-proc').addEventListener('click', function(){ $('modal-editar-proc').classList.remove('active'); });
+  $('btn-salvar-editar-proc').addEventListener('click', salvarEditarProcedimento);
+  $('btn-fechar-lista-pendentes').addEventListener('click', function(){ $('modal-lista-pendentes').classList.remove('active'); });
+  $('fin-de').addEventListener('change', renderFinanceiro);
+  $('fin-ate').addEventListener('change', renderFinanceiro);
+  $('fin-cliente').addEventListener('change', renderFinanceiro);
+
+  $('ag-procedimento').addEventListener('change', function() {
+    if (this.value === '__outro__') { $('ag-procedimento-outro-grupo').style.display = 'flex'; }
+    else {
+      $('ag-procedimento-outro-grupo').style.display = 'none';
+      var p = catalogoProcedimentos.find(function(x){ return x.nome === this.value; }.bind(this));
+      if (p && p.valorPadrao && !$('ag-valor').value) $('ag-valor').value = p.valorPadrao;
+    }
+  });
+  $('proc-nome').addEventListener('change', function() {
+    if (this.value === '__outro__') { $('proc-outro-grupo').style.display = 'flex'; }
+    else {
+      $('proc-outro-grupo').style.display = 'none';
+      var p = catalogoProcedimentos.find(function(x){ return x.nome === this.value; }.bind(this));
+      if (p && p.valorPadrao && !$('proc-valor').value) $('proc-valor').value = p.valorPadrao;
+    }
+  });
+
+  var filtros = document.querySelectorAll('.filter-btn[data-filtro]');
+  for (var i = 0; i < filtros.length; i++) {
+    filtros[i].addEventListener('click', function() {
+      var btns = document.querySelectorAll('.filter-btn[data-filtro]');
+      for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active');
+      this.classList.add('active');
+      filtroAgenda = this.getAttribute('data-filtro');
+      renderAgenda();
+    });
+  }
+  var filtrosFin = document.querySelectorAll('.filter-btn[data-fin]');
+  for (var k = 0; k < filtrosFin.length; k++) {
+    filtrosFin[k].addEventListener('click', function() {
+      var btns = document.querySelectorAll('.filter-btn[data-fin]');
+      for (var m = 0; m < btns.length; m++) btns[m].classList.remove('active');
+      this.classList.add('active');
+      filtroFin = this.getAttribute('data-fin');
+      $('fin-de').value = ''; $('fin-ate').value = '';
+      renderFinanceiro();
+    });
+  }
+  var filtrosMassa = document.querySelectorAll('.filter-btn[data-massa]');
+  for (var n = 0; n < filtrosMassa.length; n++) {
+    filtrosMassa[n].addEventListener('click', function() {
+      var btns = document.querySelectorAll('.filter-btn[data-massa]');
+      for (var q = 0; q < btns.length; q++) btns[q].classList.remove('active');
+      this.classList.add('active');
+      filtroMassa = this.getAttribute('data-massa');
+      selecionadosMassa = {};
+      renderMassaLista();
+    });
+  }
+  var filtrosRet = document.querySelectorAll('.filter-btn[data-retorno]');
+  for (var r = 0; r < filtrosRet.length; r++) {
+    filtrosRet[r].addEventListener('click', function() {
+      var btns = document.querySelectorAll('.filter-btn[data-retorno]');
+      for (var s = 0; s < btns.length; s++) btns[s].classList.remove('active');
+      this.classList.add('active');
+      filtroRetorno = this.getAttribute('data-retorno');
+      selecionadosMassa = {};
+      renderMassaRetorno();
+    });
+  }
+}
+
+// ===== INIT =====
+function init() {
+  try {
+    // Migração: procedimentos sem statusPag
+    var migrou = false;
+    procedimentos.forEach(function(p) {
+      if ((!p.statusPag || p.statusPag === 'pendente') && p.pagamento && parseFloat(p.valor) > 0) {
+        p.statusPag = 'pago';
+        migrou = true;
+      }
+    });
+    agendamentos.forEach(function(a) {
+      if (!a.statusPag) { a.statusPag = 'pendente'; migrou = true; }
+    });
+    // Migração: criar catálogo a partir de procedimentos/agendamentos existentes
+    if (!catalogoProcedimentos.length) {
+      var nomesUnicos = {};
+      procedimentos.forEach(function(p) { if (p.nome) nomesUnicos[p.nome] = true; });
+      agendamentos.forEach(function(a) { if (a.procedimento) nomesUnicos[a.procedimento] = true; });
+      Object.keys(nomesUnicos).forEach(function(nome) {
+        catalogoProcedimentos.push({ id: uid(), nome: nome, dias: 0, valorPadrao: '', icone: '', ativo: true });
+        migrou = true;
+      });
+    }
+    if (migrou) salvar();
+
+    $('proc-data').value = hojeISO();
+    bind();
+    renderDashboard();
+    renderClientes();
+    renderSelectClientes();
+    renderFinSelectClientes();
+    renderAgenda();
+    renderSelectProcedimentos();
+    renderSelectProcForm();
+    renderSelectProcRetorno();
+    renderListaProcCat();
+    renderTextosMsg();
+    renderMassaTextoSelect();
+    renderMassaLista();
+    renderFinanceiro();
+  } catch(e) {
+    alert('ERRO na inicialização: ' + e.message);
+    console.error(e);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+})();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
