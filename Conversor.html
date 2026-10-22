@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversor de Unidades</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card-2: #273449;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-2: #0ea5e9;
+    --border: #334155;
+    --ok: #22c55e;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --card-2: #f8fafc;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #0284c7;
+      --accent-2: #0369a1;
+      --border: #e2e8f0;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    min-height: 100vh;
+  }
+  .container { max-width: 760px; margin: 0 auto; }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .subtitle { color: var(--muted); font-size: .85rem; margin-bottom: 24px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  }
+  .card h2 {
+    font-size: .95rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--muted);
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+  label {
+    display: block;
+    font-size: .8rem;
+    color: var(--muted);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  select, input {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+  }
+  select:focus, input:focus { border-color: var(--accent); }
+  input[type="text"] { font-variant-numeric: tabular-nums; }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr 1fr;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 12px;
+  }
+  .arrow {
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin: 4px 0;
+  }
+  .result-box {
+    background: linear-gradient(135deg, var(--accent-2), var(--accent));
+    color: white;
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .result-box .label {
+    font-size: .75rem;
+    opacity: .85;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .result-box .value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 6px 0 2px;
+    font-variant-numeric: tabular-nums;
+    word-break: break-all;
+  }
+  .result-box .formula {
+    font-size: .8rem;
+    opacity: .9;
+    font-variant-numeric: tabular-nums;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: .7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: 6px;
+  }
+  .hint {
+    font-size: .75rem;
+    color: var(--muted);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+  .swap {
+    background: var(--card-2);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    width: 100%;
+    padding: 8px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: .85rem;
+    margin-bottom: 10px;
+    transition: all .15s;
+  }
+  .swap:hover { border-color: var(--accent); background: var(--card); }
+  @media (max-width: 520px) {
+    .row-3 { grid-template-columns: 1fr; }
+    .result-box .value { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🧮 Conversor de Unidades</h1>
+  <div class="subtitle">Offline · SI · Prefixos incluídos</div>
+
+  <!-- CONVERSOR PRINCIPAL -->
+  <div class="card">
+    <h2>Conversor principal</h2>
+
+    <label for="grandeza">Grandeza</label>
+    <select id="grandeza"></select>
+
+    <div style="height:12px"></div>
+
+    <div class="row">
+      <div>
+        <label for="unOrigem">De</label>
+        <select id="unOrigem"></select>
+      </div>
+      <div>
+        <label for="unDestino">Para</label>
+        <select id="unDestino"></select>
+      </div>
+    </div>
+
+    <button class="swap" id="swapBtn">⇅ Inverter unidades</button>
+
+    <label for="valor">Valor</label>
+    <input type="text" id="valor" inputmode="decimal" value="1" autocomplete="off">
+
+    <div class="arrow">⬇</div>
+
+    <div class="result-box">
+      <div class="label">Resultado</div>
+      <div class="value" id="resultado">—</div>
+      <div class="formula" id="formula"></div>
+    </div>
+
+    <div class="hint" id="hintGrandeza"></div>
+  </div>
+
+  <!-- CONVERSOR DE PREFIXOS SI -->
+  <div class="card">
+    <h2>Prefixos SI <span class="badge">independente</span></h2>
+
+    <div class="row-3">
+      <div>
+        <label for="prefValor">Valor</label>
+        <input type="text" id="prefValor" inputmode="decimal" value="1" autocomplete="off">
+      </div>
+      <div>
+        <label for="prefOrigem">Prefixo origem</label>
+        <select id="prefOrigem"></select>
+      </div>
+      <div>
+        <label for="prefDestino">Prefixo destino</label>
+        <select id="prefDestino"></select>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div class="label">Resultado</div>
+      <div class="value" id="prefResultado">—</div>
+      <div class="formula" id="prefFormula"></div>
+    </div>
+
+    <div class="hint">
+      Ex.: 5 <strong>k</strong>Ω → <strong>m</strong>Ω = 5.000.000 mΩ. O prefixo é aplicado sobre qualquer unidade (Ω, F, W, V, A, Hz...).
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   DADOS — Grandezas e unidades
+   Cada unidade tem fator para a unidade base da grandeza.
+   Unidades "lineares" usam fator. Temperatura usa toBase/fromBase.
+   ============================================================ */
+const GRANDEZAS = {
+  comprimento: {
+    nome: "Comprimento",
+    base: "m",
+    unidades: {
+      "m":   1,
+      "km":  1000,
+      "cm":  0.01,
+      "mm":  0.001,
+      "µm":  1e-6,
+      "nm":  1e-9,
+      "in":  0.0254,
+      "ft":  0.3048,
+      "yd":  0.9144,
+      "mi":  1609.344
+    }
+  },
+  area: {
+    nome: "Área",
+    base: "m²",
+    unidades: {
+      "m²":   1,
+      "km²":  1e6,
+      "cm²":  1e-4,
+      "mm²":  1e-6,
+      "ha":   1e4,
+      "acre": 4046.8564224,
+      "ft²":  0.09290304,
+      "in²":  0.00064516
+    }
+  },
+  volume: {
+    nome: "Volume",
+    base: "m³",
+    unidades: {
+      "m³":    1,
+      "L":     0.001,
+      "mL":    1e-6,
+      "cm³":   1e-6,
+      "km³":   1e9,
+      "gal US": 0.003785411784,
+      "gal UK": 0.00454609,
+      "fl oz US": 2.95735295625e-5
+    }
+  },
+  massa: {
+    nome: "Massa",
+    base: "kg",
+    unidades: {
+      "kg": 1,
+      "g":  0.001,
+      "mg": 1e-6,
+      "t":  1000,
+      "lb": 0.45359237,
+      "oz": 0.028349523125
+    }
+  },
+  forca: {
+    nome: "Força",
+    base: "N",
+    unidades: {
+      "N":   1,
+      "kN":  1000,
+      "kgf": 9.80665,
+      "lbf": 4.4482216152605,
+      "dyn": 1e-5
+    }
+  },
+  energia: {
+    nome: "Energia",
+    base: "J",
+    unidades: {
+      "J":    1,
+      "kJ":   1000,
+      "cal":  4.184,
+      "kcal": 4184,
+      "kWh":  3.6e6,
+      "eV":   1.602176634e-19,
+      "BTU":  1055.05585262
+    }
+  },
+  potencia: {
+    nome: "Potência",
+    base: "W",
+    unidades: {
+      "W":     1,
+      "kW":    1000,
+      "MW":    1e6,
+      "HP":    745.6998715822702,
+      "cv":    735.49875,
+      "BTU/h": 0.2930710701722222
+    }
+  },
+  pressao: {
+    nome: "Pressão",
+    base: "Pa",
+    unidades: {
+      "Pa":   1,
+      "kPa":  1000,
+      "bar":  1e5,
+      "atm":  101325,
+      "psi":  6894.757293168,
+      "mmHg": 133.322387415
+    }
+  },
+  velocidade: {
+    nome: "Velocidade",
+    base: "m/s",
+    unidades: {
+      "m/s":  1,
+      "km/h": 1/3.6,
+      "mph":  0.44704,
+      "nós":  0.514444444
+    }
+  },
+  tempo: {
+    nome: "Tempo",
+    base: "s",
+    unidades: {
+      "s":   1,
+      "ms":  0.001,
+      "min": 60,
+      "h":   3600,
+      "dia": 86400
+    }
+  },
+  temperatura: {
+    nome: "Temperatura",
+    base: "K",
+    especial: true,
+    unidades: {
+      "°C": {
+        toBase:   v => v + 273.15,
+        fromBase: v => v - 273.15
+      },
+      "°F": {
+        toBase:   v => (v - 32) * 5/9 + 273.15,
+        fromBase: v => (v - 273.15) * 9/5 + 32
+      },
+      "K": {
+        toBase:   v => v,
+        fromBase: v => v
+      }
+    }
+  }
+};
+
+/* ============================================================
+   PREFIXOS SI
+   ============================================================ */
+const PREFIXOS = {
+  "Y":  1e24, "Z": 1e21, "E": 1e18, "P": 1e15, "T": 1e12,
+  "G":  1e9,  "M": 1e6,  "k": 1e3,  "h": 1e2,  "da": 1e1,
+  "":    1,
+  "d":  1e-1, "c": 1e-2, "m": 1e-3, "µ": 1e-6, "n": 1e-9,
+  "p":  1e-12,"f": 1e-15,"a": 1e-18,"z": 1e-21,"y": 1e-24
+};
+
+/* ============================================================
+   UTILITÁRIOS
+   ============================================================ */
+// Aceita "2,5" ou "2.5"; ignora espaços
+function parseNum(str) {
+  if (typeof str === "number") return str;
+  const clean = String(str).trim().replace(/\s/g, "").replace(",", ".");
+  if (clean === "" || clean === "-" || clean === ".") return NaN;
+  return Number(clean);
+}
+
+// Formata número com até 10 algarismos significativos, em pt-BR.
+// Usa notação científica quando o valor é muito grande ou muito pequeno.
+function fmt(n) {
+  if (!isFinite(n)) return "—";
+  if (n === 0) return "0";
+  const abs = Math.abs(n);
+  const p = Number(n.toPrecision(10));
+  if (abs >= 1e15 || abs < 1e-6) {
+    // notação científica em pt-BR: 1,234 × 10⁻⁹
+    const exp = Math.floor(Math.log10(Math.abs(p)));
+    const mant = p / Math.pow(10, exp);
+    return mant.toLocaleString("pt-BR", { maximumFractionDigits: 6 }) +
+           " × 10" + superscript(exp);
+  }
+  return p.toLocaleString("pt-BR", { maximumFractionDigits: 10 });
+}
+
+function superscript(n) {
+  const map = { "-":"⁻", "0":"⁰","1":"¹","2":"²","3":"³","4":"⁴",
+                "5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹" };
+  return String(n).split("").map(c => map[c] || c).join("");
+}
+
+/* ============================================================
+   CONVERSOR PRINCIPAL
+   ============================================================ */
+const elGrandeza = document.getElementById("grandeza");
+const elOrigem   = document.getElementById("unOrigem");
+const elDestino  = document.getElementById("unDestino");
+const elValor    = document.getElementById("valor");
+const elResult   = document.getElementById("resultado");
+const elFormula  = document.getElementById("formula");
+const elHint     = document.getElementById("hintGrandeza");
+const elSwap     = document.getElementById("swapBtn");
+
+// Popular lista de grandezas
+for (const [key, g] of Object.entries(GRANDEZAS)) {
+  const opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = g.nome;
+  elGrandeza.appendChild(opt);
+}
+elGrandeza.value = "comprimento";
+
+// Popular unidades de uma grandeza em um <select>
+function populateUnidades(select, grandezaKey, selected) {
+  select.innerHTML = "";
+  const g = GRANDEZAS[grandezaKey];
+  for (const u of Object.keys(g.unidades)) {
+    const opt = document.createElement("option");
+    opt.value = u;
+    opt.textContent = u;
+    select.appendChild(opt);
+  }
+  if (selected && g.unidades[selected]) select.value = selected;
+}
+
+// Atualiza selects de unidade quando a grandeza muda
+function onGrandezaChange() {
+  const key = elGrandeza.value;
+  const g = GRANDEZAS[key];
+  const unidades = Object.keys(g.unidades);
+  populateUnidades(elOrigem, key, unidades[0]);
+  populateUnidades(elDestino, key, unidades[Math.min(1, unidades.length - 1)]);
+  elHint.textContent = g.especial
+    ? "⚠️ Temperatura usa fórmulas específicas, não fator multiplicativo."
+    : `Unidade base: ${g.base}. Conversão = valor × fator(origem) ÷ fator(destino).`;
+  converter();
+}
+
+// Conversão principal
+function converter() {
+  const key = elGrandeza.value;
+  const g = GRANDEZAS[key];
+  const uO = elOrigem.value;
+  const uD = elDestino.value;
+  const v = parseNum(elValor.value);
+
+  if (!isFinite(v)) {
+    elResult.textContent = "—";
+    elFormula.textContent = "Digite um número válido";
+    return;
+  }
+
+  let resultado;
+  if (g.especial) {
+    const o = g.unidades[uO];
+    const d = g.unidades[uD];
+    const base = o.toBase(v);
+    resultado = d.fromBase(base);
+  } else {
+    const fo = g.unidades[uO];
+    const fd = g.unidades[uD];
+    resultado = v * fo / fd;
+  }
+
+  elResult.textContent = fmt(resultado) + " " + uD;
+  elFormula.textContent = `${fmt(v)} ${uO} → ${fmt(resultado)} ${uD}`;
+}
+
+// Inverter unidades
+elSwap.addEventListener("click", () => {
+  const tmp = elOrigem.value;
+  elOrigem.value = elDestino.value;
+  elDestino.value = tmp;
+  converter();
+});
+
+elGrandeza.addEventListener("change", onGrandezaChange);
+elOrigem.addEventListener("change", converter);
+elDestino.addEventListener("change", converter);
+elValor.addEventListener("input", converter);
+
+/* ============================================================
+   CONVERSOR DE PREFIXOS SI
+   ============================================================ */
+const elPrefValor    = document.getElementById("prefValor");
+const elPrefOrigem   = document.getElementById("prefOrigem");
+const elPrefDestino  = document.getElementById("prefDestino");
+const elPrefResult   = document.getElementById("prefResultado");
+const elPrefFormula  = document.getElementById("prefFormula");
+
+// Popular prefixos (mostrando o valor por extenso)
+function labelPrefixo(p) {
+  if (p === "") return "(nenhum) = 1";
+  return `${p}  (${PREFIXOS[p].toExponential(0)})`;
+}
+
+for (const p of Object.keys(PREFIXOS)) {
+  const opt1 = document.createElement("option");
+  opt1.value = p;
+  opt1.textContent = labelPrefixo(p);
+  elPrefOrigem.appendChild(opt1);
+
+  const opt2 = document.createElement("option");
+  opt2.value = p;
+  opt2.textContent = labelPrefixo(p);
+  elPrefDestino.appendChild(opt2);
+}
+elPrefOrigem.value = "k";
+elPrefDestino.value = "";
+
+function converterPrefixo() {
+  const v = parseNum(elPrefValor.value);
+  const fo = PREFIXOS[elPrefOrigem.value];
+  const fd = PREFIXOS[elPrefDestino.value];
+
+  if (!isFinite(v)) {
+    elPrefResult.textContent = "—";
+    elPrefFormula.textContent = "Digite um número válido";
+    return;
+  }
+
+  const resultado = v * fo / fd;
+  const ro = elPrefOrigem.value || "(sem prefixo)";
+  const rd = elPrefDestino.value || "(sem prefixo)";
+  elPrefResult.textContent = fmt(resultado);
+  elPrefFormula.textContent = `${fmt(v)} × ${ro} → ${rd}`;
+}
+
+elPrefValor.addEventListener("input", converterPrefixo);
+elPrefOrigem.addEventListener("change", converterPrefixo);
+elPrefDestino.addEventListener("change", converterPrefixo);
+
+/* ============================================================
+   INICIALIZAÇÃO
+   ============================================================ */
+onGrandezaChange();
+converterPrefixo();
+</script>
+</body>
+</html>
