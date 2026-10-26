@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador Contábil Didático</title>
+<style>
+  :root {
+    --bg:#f5f7fb; --panel:#fff; --border:#e2e8f0; --text:#1e293b; --muted:#64748b;
+    --ativo:#2563eb; --passivo:#dc2626; --pl:#7c3aed; --receita:#059669; --despesa:#ea580c;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:20px; }
+  h1 { margin:0 0 4px; font-size:1.4rem; }
+  h2 { margin:0 0 10px; font-size:1.05rem; }
+  .subtitle { color:var(--muted); margin:0 0 20px; font-size:0.9rem; }
+  .layout { display:grid; grid-template-columns:400px 1fr; gap:20px; align-items:start; }
+  @media (max-width:900px) { .layout { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .left-col { display:flex; flex-direction:column; gap:16px; }
+  label { display:block; font-size:0.8rem; color:var(--muted); margin:10px 0 4px; text-transform:uppercase; letter-spacing:0.4px; }
+  select, input {
+    width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px;
+    font-size:0.95rem; background:#fff; font-family:inherit; color:var(--text);
+  }
+  select:focus, input:focus { outline:2px solid #93c5fd; border-color:transparent; }
+  button {
+    background:var(--ativo); color:#fff; border:none; padding:10px 16px; border-radius:8px;
+    cursor:pointer; font-size:0.95rem; font-weight:500; font-family:inherit;
+  }
+  button:hover { filter:brightness(0.92); }
+  button.secondary { background:#e2e8f0; color:var(--text); }
+  button.secondary:hover { background:#cbd5e1; }
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab {
+    padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:#fff;
+    cursor:pointer; font-size:0.82rem; color:var(--text);
+  }
+  .tab.active { background:var(--ativo); color:#fff; border-color:var(--ativo); }
+  .actions { display:flex; gap:8px; margin-top:14px; }
+  .actions button { flex:1; }
+  .hint {
+    background:#eff6ff; border-left:3px solid var(--ativo); padding:8px 10px;
+    font-size:0.78rem; border-radius:6px; margin-top:12px; color:#1e40af; line-height:1.4;
+  }
+  .hint.warn { background:#fef3c7; border-left-color:#d97706; color:#92400e; }
+
+  /* Balanço */
+  .balanco { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .balanco-col h3 { margin:0 0 8px; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.5px; }
+  .linha {
+    display:flex; justify-content:space-between; padding:5px 0;
+    border-bottom:1px dashed var(--border); font-size:0.85rem;
+  }
+  .linha.zero { color:var(--muted); font-style:italic; }
+  .linha .valor { font-variant-numeric:tabular-nums; }
+  .total {
+    display:flex; justify-content:space-between; padding:8px 0;
+    font-weight:700; border-top:2px solid var(--text); margin-top:6px; font-size:0.9rem;
+  }
+  .subtotal {
+    display:flex; justify-content:space-between; padding:4px 0;
+    font-weight:600; border-top:1px solid var(--border); margin-top:6px; font-size:0.85rem;
+  }
+  .check {
+    margin-top:16px; padding:12px; border-radius:8px; font-size:0.88rem;
+    font-weight:500; text-align:center; line-height:1.4;
+  }
+  .check.ok { background:#dcfce7; color:#166534; }
+  .check.bad { background:#fee2e2; color:#991b1b; }
+
+  /* Razonetes */
+  .razonetes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; margin-top:14px; }
+  .razonete { border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; display:flex; flex-direction:column; min-width:0; }
+  .razonete-title {
+    padding:8px 12px; font-weight:600; font-size:0.85rem; color:#fff;
+    display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .razonete-title > span:first-child { word-break:break-word; min-width:0; }
+  .razonete-title .natureza { font-size:0.65rem; font-weight:400; opacity:0.88; white-space:nowrap; flex-shrink:0; }
+  .razonete-title.ativo { background:var(--ativo); }
+  .razonete-title.passivo { background:var(--passivo); }
+  .razonete-title.pl { background:var(--pl); }
+  .razonete-title.receita { background:var(--receita); }
+  .razonete-title.despesa { background:var(--despesa); }
+  .razonete-body { display:grid; grid-template-columns:1fr 1fr; min-height:90px; }
+  .razonete-side { padding:8px 10px; font-size:0.78rem; min-width:0; }
+  .razonete-side:first-child { border-right:1px solid var(--border); }
+  .razonete-side h4 {
+    margin:0 0 4px; font-size:0.65rem; color:var(--muted);
+    text-transform:uppercase; letter-spacing:0.5px;
+  }
+  .razonete-side ul { margin:0; padding:0; list-style:none; }
+  .razonete-side li { display:flex; justify-content:space-between; gap:8px; padding:3px 0; align-items:flex-start; }
+  .razonete-side li span:first-child { color:var(--muted); flex:1; min-width:0; word-break:break-word; line-height:1.35; }
+  .razonete-side li span:last-child { flex-shrink:0; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .razonete-saldo {
+    padding:7px 10px; background:#f8fafc; font-size:0.8rem;
+    display:flex; justify-content:space-between; border-top:1px solid var(--border); font-weight:600;
+  }
+  .razonete-saldo .devedor { color:var(--ativo); }
+  .razonete-saldo .credor { color:var(--passivo); }
+  .razonete-saldo .zerado { color:var(--muted); }
+
+  table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+  th, td { text-align:left; padding:6px 8px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.4px; }
+  td.valor { text-align:right; font-variant-numeric:tabular-nums; }
+  .empty { color:var(--muted); font-style:italic; padding:12px 0; font-size:0.85rem; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:0.75rem; margin-top:4px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .legend i { width:10px; height:10px; border-radius:3px; display:inline-block; }
+</style>
+</head>
+<body>
+
+<h1>📚 Simulador Contábil</h1>
+<p class="subtitle">Escolha as contas, lance os valores e veja o balanço e os razonetes se desenhando em tempo real.</p>
+
+<div class="layout">
+  <div class="left-col">
+    <div class="panel">
+      <h2>Novo lançamento</h2>
+      <div class="tabs">
+        <button class="tab active" data-mode="lancamento">Débito + Crédito</button>
+        <button class="tab" data-mode="avulso">Conta avulsa</button>
+      </div>
+
+      <div id="form-lancamento">
+        <label>Conta de Débito</label>
+        <select id="sel-debito"></select>
+        <label>Conta de Crédito</label>
+        <select id="sel-credito"></select>
+        <label>Valor (R$)</label>
+        <input type="number" id="inp-valor" min="0.01" step="0.01" placeholder="0,00">
+        <div class="actions"><button id="btn-lancar">Lançar</button></div>
+        <div class="hint">Todo lançamento tem <b>débito = crédito</b>. Aqui você escolhe as duas pontas.</div>
+      </div>
+
+      <div id="form-avulso" style="display:none;">
+        <label>Conta</label>
+        <select id="sel-conta-avulsa"></select>
+        <label>Lado</label>
+        <select id="sel-side">
+          <option value="debito">Débito (lado esquerdo)</option>
+          <option value="credito">Crédito (lado direito)</option>
+        </select>
+        <label>Valor (R$)</label>
+        <input type="number" id="inp-valor-avulso" min="0.01" step="0.01" placeholder="0,00">
+        <div class="actions"><button id="btn-lancar-avulso">Adicionar</button></div>
+        <div class="hint warn">Adiciona só <b>um lado</b>. Serve pra explorar a natureza — se você não lançar a contrapartida, o balanço não fecha.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        Histórico
+        <button id="btn-reset" class="secondary" style="padding:4px 10px; font-size:0.72rem;">Limpar tudo</button>
+      </h2>
+      <div id="historico"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Balanço</h2>
+    <div class="balanco">
+      <div class="balanco-col">
+        <h3 style="color:var(--ativo);">Ativo</h3>
+        <div id="lista-ativo"></div>
+        <div class="total"><span>Total Ativo</span><span id="tot-ativo">R$ 0,00</span></div>
+      </div>
+      <div class="balanco-col">
+        <h3 style="color:var(--passivo);">Passivo + PL + Resultado</h3>
+        <div id="lista-passivo"></div>
+        <div id="lista-pl"></div>
+        <div id="lista-resultado"></div>
+        <div class="total"><span>Total</span><span id="tot-passivo-pl">R$ 0,00</span></div>
+      </div>
+    </div>
+    <div id="check" class="check ok">Balanço zerado. Adicione um lançamento para começar.</div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:20px;">
+  <h2>Razonetes</h2>
+  <div class="legend">
+    <span><i style="background:var(--ativo);"></i> Ativo (devedora)</span>
+    <span><i style="background:var(--passivo);"></i> Passivo (credora)</span>
+    <span><i style="background:var(--pl);"></i> PL (credora)</span>
+    <span><i style="background:var(--receita);"></i> Receita (credora)</span>
+    <span><i style="background:var(--despesa);"></i> Despesa (devedora)</span>
+  </div>
+  <div class="razonetes-grid" id="razonetes"></div>
+  <div id="razonetes-empty" class="empty">Nenhum lançamento ainda. Adicione um ao lado para ver os razonetes aparecerem.</div>
+</div>
+
+<div class="panel" style="margin-top:20px;">
+  <h2>🎯 Primeiros movimentos sugeridos</h2>
+  <p style="color:var(--muted);font-size:0.85rem;margin:0 0 12px;">
+    Roteiro para começar. Use sempre o modo <b>Débito + Crédito</b>. Depois de cada lançamento, confira o razonete da conta que mudou e o check do balanço.
+  </p>
+  <ol style="margin:0;padding-left:22px;font-size:0.88rem;line-height:1.75;">
+    <li>
+      <b>Integralização do capital</b> — D <b>Caixa</b> / C <b>Capital Social</b> — R$ 10.000<br>
+      <span style="color:var(--muted);font-size:0.8rem;">A empresa nasce. O Ativo (Caixa) e o PL (Capital) aparecem e o balanço fecha verde.</span>
+    </li>
+    <li>
+      <b>Compra de imobilizado à vista</b> — D <b>Móveis e Utensílios</b> / C <b>Caixa</b> — R$ 3.000<br>
+      <span style="color:var(--muted);font-size:0.8rem;">Só troca a composição do Ativo: Caixa cai, Imobilizado sobe, o Total não muda.</span>
+    </li>
+    <li>
+      <b>Compra de estoque a prazo</b> — D <b>Estoques</b> / C <b>Fornecedores</b> — R$ 2.000<br>
+      <span style="color:var(--muted);font-size:0.8rem;">Aparece o primeiro Passivo (Fornecedores) no lado direito do balanço.</span>
+    </li>
+    <li>
+      <b>Venda à vista</b> — D <b>Caixa</b> / C <b>Receita de Vendas</b> — R$ 4.000<br>
+      <span style="color:var(--muted);font-size:0.8rem;">Surge o Resultado do período no lado direito. O Ativo também cresce — e o balanço continua fechando.</span>
+    </li>
+    <li>
+      <b>Baixa do estoque vendido (CMV)</b> — D <b>CMV</b> / C <b>Estoques</b> — R$ 1.500<br>
+      <span style="color:var(--muted);font-size:0.8rem;">A despesa reduz o Resultado. Repare que Ativo e Passivo+PL+Resultado permanecem iguais.</span>
+    </li>
+  </ol>
+  <div class="hint" style="margin-top:14px;">
+    Dica: só use o modo <b>Conta avulsa</b> <u>depois</u> de entender bem os lançamentos completos. Ele serve para explorar a natureza de uma conta isolada — mas faz o balanço "não fechar" de propósito, para mostrar por que as partidas dobradas existem.
+  </div>
+</div>
+
+<script>
+const CONTAS = {
+  ativo: {
+    label: 'Ativo', natureza: 'devedora',
+    contas: [
+      {id:'caixa', nome:'Caixa'},
+      {id:'bancos', nome:'Bancos'},
+      {id:'estoques', nome:'Estoques'},
+      {id:'clientes', nome:'Clientes'},
+      {id:'moveis', nome:'Móveis e Utensílios'},
+      {id:'veiculos', nome:'Veículos'},
+    ]
+  },
+  passivo: {
+    label: 'Passivo', natureza: 'credora',
+    contas: [
+      {id:'fornecedores', nome:'Fornecedores'},
+      {id:'salarios_pagar', nome:'Salários a Pagar'},
+      {id:'emprestimos', nome:'Empréstimos a Pagar'},
+    ]
+  },
+  pl: {
+    label: 'Patrimônio Líquido', natureza: 'credora',
+    contas: [
+      {id:'capital', nome:'Capital Social'},
+      {id:'lucros', nome:'Lucros Acumulados'},
+      {id:'prejuizos', nome:'Prejuízos Acumulados', retificadora:true},
+    ]
+  },
+  receita: {
+    label: 'Receita', natureza: 'credora',
+    contas: [
+      {id:'rec_vendas', nome:'Receita de Vendas'},
+      {id:'rec_servicos', nome:'Receita de Serviços'},
+    ]
+  },
+  despesa: {
+    label: 'Despesa / Custo', natureza: 'devedora',
+    contas: [
+      {id:'desp_salarios', nome:'Despesa de Salários'},
+      {id:'desp_aluguel', nome:'Despesa de Aluguel'},
+      {id:'desp_energia', nome:'Despesa de Energia'},
+      {id:'cmv', nome:'CMV'},
+    ]
+  }
+};
+
+const CONTA_MAP = {};
+for (const grupo of Object.keys(CONTAS)) {
+  for (const c of CONTAS[grupo].contas) {
+    CONTA_MAP[c.id] = { ...c, grupo, retificadora: !!c.retificadora };
+  }
+}
+
+let lancamentos = [];
+let modoAtual = 'lancamento';
+
+const fmt = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+
+function fillSelect(el, withEmpty) {
+  el.innerHTML = '';
+  if (withEmpty) {
+    const o = document.createElement('option');
+    o.value = ''; o.textContent = '— escolha a conta —';
+    el.appendChild(o);
+  }
+  for (const grupo of Object.keys(CONTAS)) {
+    const og = document.createElement('optgroup');
+    og.label = CONTAS[grupo].label;
+    for (const c of CONTAS[grupo].contas) {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.nome;
+      og.appendChild(o);
+    }
+    el.appendChild(og);
+  }
+}
+
+fillSelect(document.getElementById('sel-debito'), true);
+fillSelect(document.getElementById('sel-credito'), true);
+fillSelect(document.getElementById('sel-conta-avulsa'), true);
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    modoAtual = tab.dataset.mode;
+    document.getElementById('form-lancamento').style.display = modoAtual === 'lancamento' ? '' : 'none';
+    document.getElementById('form-avulso').style.display = modoAtual === 'avulso' ? '' : 'none';
+  });
+});
+
+document.getElementById('btn-lancar').addEventListener('click', () => {
+  const debito  = document.getElementById('sel-debito').value;
+  const credito = document.getElementById('sel-credito').value;
+  const valor   = parseFloat(document.getElementById('inp-valor').value);
+  if (!debito || !credito) return alert('Escolha as duas contas.');
+  if (debito === credito) return alert('Débito e crédito não podem ser a mesma conta.');
+  if (!valor || valor <= 0) return alert('Informe um valor válido.');
+  lancamentos.push({tipo:'lancamento', debito, credito, valor});
+  document.getElementById('inp-valor').value = '';
+  render();
+});
+
+document.getElementById('btn-lancar-avulso').addEventListener('click', () => {
+  const conta = document.getElementById('sel-conta-avulsa').value;
+  const side  = document.getElementById('sel-side').value;
+  const valor = parseFloat(document.getElementById('inp-valor-avulso').value);
+  if (!conta) return alert('Escolha a conta.');
+  if (!valor || valor <= 0) return alert('Informe um valor válido.');
+  lancamentos.push({tipo:'avulso', conta, side, valor});
+  document.getElementById('inp-valor-avulso').value = '';
+  render();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (lancamentos.length === 0) return;
+  if (confirm('Limpar todos os lançamentos?')) { lancamentos = []; render(); }
+});
+
+function getMovimento(contaId) {
+  const debitos = [], creditos = [];
+  for (const l of lancamentos) {
+    if (l.tipo === 'lancamento') {
+      if (l.debito  === contaId) debitos.push({valor:l.valor, ref:CONTA_MAP[l.credito].nome});
+      if (l.credito === contaId) creditos.push({valor:l.valor, ref:CONTA_MAP[l.debito].nome});
+    } else {
+      if (l.conta === contaId && l.side === 'debito')  debitos.push({valor:l.valor, ref:'(avulso)'});
+      if (l.conta === contaId && l.side === 'credito') creditos.push({valor:l.valor, ref:'(avulso)'});
+    }
+  }
+  return {debitos, creditos};
+}
+
+function saldoRaw(contaId) {
+  const m = getMovimento(contaId);
+  const d = m.debitos.reduce((s,x)=>s+x.valor,0);
+  const c = m.creditos.reduce((s,x)=>s+x.valor,0);
+  return d - c;
+}
+
+function contasComMovimento() {
+  return Object.keys(CONTA_MAP).filter(id => {
+    const m = getMovimento(id);
+    return m.debitos.length + m.creditos.length > 0;
+  });
+}
+
+function render() {
+  renderBalanco();
+  renderRazonetes();
+  renderHistorico();
+}
+
+function renderBalanco() {
+  // ATIVO
+  let totAtivo = 0;
+  const listAtivo = document.getElementById('lista-ativo');
+  listAtivo.innerHTML = '';
+  const ativos = CONTAS.ativo.contas
+    .map(c => ({...c, saldo: saldoRaw(c.id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  if (!ativos.length) listAtivo.innerHTML = '<div class="linha zero"><span>(sem conta)</span><span>—</span></div>';
+  for (const c of ativos) {
+    totAtivo += c.saldo;
+    listAtivo.innerHTML += `<div class="linha"><span>${c.nome}</span><span class="valor">${fmt(c.saldo)}</span></div>`;
+  }
+  document.getElementById('tot-ativo').textContent = fmt(totAtivo);
+
+  // PASSIVO
+  let totPassivo = 0;
+  const listPassivo = document.getElementById('lista-passivo');
+  listPassivo.innerHTML = '';
+  const passivos = CONTAS.passivo.contas
+    .map(c => ({...c, saldo: -saldoRaw(c.id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  for (const c of passivos) {
+    totPassivo += c.saldo;
+    listPassivo.innerHTML += `<div class="linha"><span>${c.nome}</span><span class="valor">${fmt(c.saldo)}</span></div>`;
+  }
+
+  // PL
+  let totPL = 0;
+  const listPL = document.getElementById('lista-pl');
+  listPL.innerHTML = '';
+  const pls = CONTAS.pl.contas
+    .map(c => ({...c, saldo: -saldoRaw(c.id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  for (const c of pls) {
+    totPL += c.saldo;
+    const tag = c.retificadora ? ' <span style="color:#94a3b8;font-size:0.72rem;">(retif.)</span>' : '';
+    listPL.innerHTML += `<div class="linha"><span>${c.nome}${tag}</span><span class="valor">${fmt(c.saldo)}</span></div>`;
+  }
+
+  // RESULTADO
+  let totRec = 0, totDesp = 0;
+  for (const c of CONTAS.receita.contas) totRec  += -saldoRaw(c.id);
+  for (const c of CONTAS.despesa.contas) totDesp +=  saldoRaw(c.id);
+  const resultado = totRec - totDesp;
+  const listRes = document.getElementById('lista-resultado');
+  listRes.innerHTML = '';
+  if (Math.abs(totRec) > 0.001 || Math.abs(totDesp) > 0.001) {
+    if (Math.abs(totRec)  > 0.001) listRes.innerHTML += `<div class="linha"><span>Receitas</span><span class="valor">${fmt(totRec)}</span></div>`;
+    if (Math.abs(totDesp) > 0.001) listRes.innerHTML += `<div class="linha"><span>(−) Despesas/Custos</span><span class="valor">${fmt(-totDesp)}</span></div>`;
+    listRes.innerHTML += `<div class="subtotal"><span>= Resultado do período</span><span class="valor">${fmt(resultado)}</span></div>`;
+  }
+
+  const totPassivoPL = totPassivo + totPL + resultado;
+  document.getElementById('tot-passivo-pl').textContent = fmt(totPassivoPL);
+
+  // CHECK
+  const check = document.getElementById('check');
+  const diff = Math.abs(totAtivo - totPassivoPL);
+  if (lancamentos.length === 0) {
+    check.className = 'check ok';
+    check.textContent = 'Balanço zerado. Adicione um lançamento para começar.';
+  } else if (diff < 0.01) {
+    check.className = 'check ok';
+    check.textContent = `✓ Balanço fechado: Ativo ${fmt(totAtivo)} = Passivo + PL + Resultado ${fmt(totPassivoPL)}`;
+  } else {
+    check.className = 'check bad';
+    check.textContent = `✗ Balanço não fecha — diferença de ${fmt(diff)}. Provavelmente há lançamentos avulsos sem contrapartida.`;
+  }
+}
+
+function renderRazonetes() {
+  const grid = document.getElementById('razonetes');
+  const empty = document.getElementById('razonetes-empty');
+  grid.innerHTML = '';
+  const contas = contasComMovimento();
+  if (contas.length === 0) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  for (const id of contas) {
+    const c = CONTA_MAP[id];
+    const m = getMovimento(id);
+    const raw = m.debitos.reduce((s,x)=>s+x.valor,0) - m.creditos.reduce((s,x)=>s+x.valor,0);
+    const tipo = raw > 0.001 ? 'devedor' : raw < -0.001 ? 'credor' : 'zerado';
+    const valor = Math.abs(raw);
+    const g = CONTAS[c.grupo];
+
+    const div = document.createElement('div');
+    div.className = 'razonete';
+    div.innerHTML = `
+      <div class="razonete-title ${c.grupo}">
+        <span>${c.nome}${c.retificadora ? ' (retif.)' : ''}</span>
+        <span class="natureza">${g.label} · ${g.natureza}</span>
+      </div>
+      <div class="razonete-body">
+        <div class="razonete-side">
+          <h4>Débito</h4>
+          <ul>${m.debitos.map(x => `<li><span>${x.ref}</span><span>${fmt(x.valor)}</span></li>`).join('') || '<li style="color:#94a3b8;">—</li>'}</ul>
+        </div>
+        <div class="razonete-side">
+          <h4>Crédito</h4>
+          <ul>${m.creditos.map(x => `<li><span>${x.ref}</span><span>${fmt(x.valor)}</span></li>`).join('') || '<li style="color:#94a3b8;">—</li>'}</ul>
+        </div>
+      </div>
+      <div class="razonete-saldo">
+        <span>Saldo</span>
+        <span class="${tipo}">${fmt(valor)}${tipo === 'devedor' ? ' D' : tipo === 'credor' ? ' C' : ''}</span>
+      </div>
+    `;
+    grid.appendChild(div);
+  }
+}
+
+function renderHistorico() {
+  const el = document.getElementById('historico');
+  el.innerHTML = '';
+  if (lancamentos.length === 0) {
+    el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>';
+    return;
+  }
+  const table = document.createElement('table');
+  table.innerHTML = `<thead><tr><th>#</th><th>Débito</th><th>Crédito</th><th style="text-align:right;">Valor</th><th></th></tr></thead><tbody></tbody>`;
+  const tbody = table.querySelector('tbody');
+  lancamentos.forEach((l, i) => {
+    const tr = document.createElement('tr');
+    const deb = l.tipo === 'lancamento' ? CONTA_MAP[l.debito].nome  : (l.side === 'debito'  ? CONTA_MAP[l.conta].nome : '—');
+    const cre = l.tipo === 'lancamento' ? CONTA_MAP[l.credito].nome : (l.side === 'credito' ? CONTA_MAP[l.conta].nome : '—');
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${deb}</td>
+      <td>${cre}</td>
+      <td class="valor">${fmt(l.valor)}</td>
+      <td><button class="secondary" style="padding:2px 8px;font-size:0.72rem;" title="Remover">×</button></td>
+    `;
+    tr.querySelector('button').addEventListener('click', () => {
+      lancamentos.splice(i, 1);
+      render();
+    });
+    tbody.appendChild(tr);
+  });
+  el.appendChild(table);
+}
+
+render();
+</script>
+</body>
+</html>
