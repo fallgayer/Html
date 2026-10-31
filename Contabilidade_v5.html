@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Simulador Contábil Didático</title>
+<style>
+  :root {
+    --bg:#f5f7fb; --panel:#fff; --border:#e2e8f0; --text:#1e293b; --muted:#64748b;
+    --ativo:#2563eb; --passivo:#dc2626; --pl:#7c3aed; --receita:#059669; --despesa:#ea580c;
+  }
+  * { box-sizing:border-box; }
+  body { font-family:system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); margin:0; padding:20px; }
+  h1 { margin:0 0 4px; font-size:1.4rem; }
+  h2 { margin:0 0 10px; font-size:1.05rem; }
+  .subtitle { color:var(--muted); margin:0 0 20px; font-size:0.9rem; }
+  .layout { display:grid; grid-template-columns:440px 1fr; gap:20px; align-items:start; }
+  @media (max-width:960px) { .layout { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .left-col { display:flex; flex-direction:column; gap:16px; }
+  label { display:block; font-size:0.8rem; color:var(--muted); margin:10px 0 4px; text-transform:uppercase; letter-spacing:0.4px; }
+  select, input { width:100%; padding:9px 10px; border:1px solid var(--border); border-radius:8px; font-size:0.95rem; background:#fff; font-family:inherit; color:var(--text); }
+  select:focus, input:focus { outline:2px solid #93c5fd; border-color:transparent; }
+  textarea { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-size:0.88rem; background:#fff; font-family:inherit; color:var(--text); resize:vertical; min-height:56px; max-height:160px; }
+  textarea:focus { outline:2px solid #93c5fd; border-color:transparent; }
+  .char-count { font-size:0.7rem; color:var(--muted); text-align:right; margin-top:2px; }
+  button { background:var(--ativo); color:#fff; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; font-size:0.95rem; font-weight:500; font-family:inherit; }
+  button:hover { filter:brightness(0.92); }
+  button.secondary { background:#e2e8f0; color:var(--text); }
+  button.secondary:hover { background:#cbd5e1; }
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { padding:6px 12px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-size:0.82rem; color:var(--text); }
+  .tab.active { background:var(--ativo); color:#fff; border-color:var(--ativo); }
+  .actions { display:flex; gap:8px; margin-top:14px; }
+  .actions button { flex:1; }
+  .hint { background:#eff6ff; border-left:3px solid var(--ativo); padding:8px 10px; font-size:0.78rem; border-radius:6px; margin-top:12px; color:#1e40af; line-height:1.4; }
+  .hint.warn { background:#fef3c7; border-left-color:#d97706; color:#92400e; }
+  .hint.ok { background:#dcfce7; border-left-color:#166534; color:#166534; }
+  #banner-missing { background:#fef3c7; border:1px solid #d97706; border-radius:10px; padding:10px 14px; margin-bottom:16px; font-size:0.85rem; color:#92400e; }
+  .balanco { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .balanco-col h3 { margin:0 0 8px; font-size:0.9rem; text-transform:uppercase; letter-spacing:0.5px; }
+  .linha { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px dashed var(--border); font-size:0.85rem; }
+  .linha.zero { color:var(--muted); font-style:italic; }
+  .linha .valor { font-variant-numeric:tabular-nums; }
+  .total { display:flex; justify-content:space-between; padding:8px 0; font-weight:700; border-top:2px solid var(--text); margin-top:6px; font-size:0.9rem; }
+  .subtotal { display:flex; justify-content:space-between; padding:4px 0; font-weight:600; border-top:1px solid var(--border); margin-top:6px; font-size:0.85rem; }
+  .check { margin-top:16px; padding:12px; border-radius:8px; font-size:0.88rem; font-weight:500; text-align:center; line-height:1.4; }
+  .check.ok { background:#dcfce7; color:#166534; }
+  .check.bad { background:#fee2e2; color:#991b1b; }
+  .razonetes-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; margin-top:14px; }
+  .razonete { border:1px solid var(--border); border-radius:10px; overflow:hidden; background:#fff; display:flex; flex-direction:column; min-width:0; }
+  .razonete-title { padding:8px 12px; font-weight:600; font-size:0.85rem; color:#fff; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .razonete-title > span:first-child { word-break:break-word; min-width:0; }
+  .razonete-title .natureza { font-size:0.65rem; font-weight:400; opacity:0.88; white-space:nowrap; flex-shrink:0; }
+  .razonete-title.ativo { background:var(--ativo); }
+  .razonete-title.passivo { background:var(--passivo); }
+  .razonete-title.pl { background:var(--pl); }
+  .razonete-title.receita { background:var(--receita); }
+  .razonete-title.despesa { background:var(--despesa); }
+  .razonete-body { display:grid; grid-template-columns:1fr 1fr; min-height:90px; }
+  .razonete-side { padding:8px 10px; font-size:0.78rem; min-width:0; }
+  .razonete-side:first-child { border-right:1px solid var(--border); }
+  .razonete-side h4 { margin:0 0 4px; font-size:0.65rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+  .razonete-side ul { margin:0; padding:0; list-style:none; }
+  .razonete-side li { display:flex; justify-content:space-between; gap:8px; padding:3px 0; align-items:flex-start; }
+  .razonete-side li span:first-child { color:var(--muted); flex:1; min-width:0; word-break:break-word; line-height:1.35; }
+  .razonete-side li span:last-child { flex-shrink:0; font-variant-numeric:tabular-nums; text-align:right; white-space:nowrap; }
+  .razonete-saldo { padding:7px 10px; background:#f8fafc; font-size:0.8rem; display:flex; justify-content:space-between; border-top:1px solid var(--border); font-weight:600; }
+  .razonete-saldo .devedor { color:var(--ativo); }
+  .razonete-saldo .credor { color:var(--passivo); }
+  .razonete-saldo .zerado { color:var(--muted); }
+  .historico-lista { display:flex; flex-direction:column; gap:6px; }
+  .historico-item { display:flex; gap:6px; padding:6px 8px; background:#fff; border:1px solid var(--border); border-radius:8px; transition:border-color 0.15s, box-shadow 0.15s, opacity 0.15s; }
+  .historico-item:hover { border-color:#94a3b8; box-shadow:0 1px 4px rgba(0,0,0,0.04); }
+  .historico-item.dragging { opacity:0.4; border-color:var(--ativo); border-style:dashed; }
+  .drag-handle { cursor:grab; color:var(--muted); user-select:none; flex-shrink:0; display:flex; align-items:center; padding:0 2px; font-size:1rem; line-height:1; letter-spacing:-2px; }
+  .drag-handle:active { cursor:grabbing; }
+  .drag-handle:hover { color:var(--ativo); }
+  .historico-content { flex:1; min-width:0; }
+  .historico-row { display:flex; align-items:center; gap:8px; font-size:0.82rem; }
+  .historico-num { color:var(--muted); font-size:0.72rem; min-width:22px; flex-shrink:0; }
+  .historico-debito, .historico-credito { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .historico-debito::before { content:'D '; color:var(--ativo); font-weight:600; }
+  .historico-credito::before { content:'C '; color:var(--passivo); font-weight:600; }
+  .historico-valor { font-variant-numeric:tabular-nums; white-space:nowrap; flex-shrink:0; font-size:0.8rem; }
+  .btn-remove-item { background:#e2e8f0; color:var(--text); border:none; padding:2px 8px; border-radius:6px; cursor:pointer; font-size:0.72rem; flex-shrink:0; font-family:inherit; }
+  .btn-remove-item:hover { background:#cbd5e1; }
+  .historico-desc { font-size:0.72rem; color:var(--muted); font-style:italic; margin-top:3px; padding-left:30px; word-break:break-word; white-space:pre-wrap; }
+  .empty { color:var(--muted); font-style:italic; padding:12px 0; font-size:0.85rem; }
+  .legend { display:flex; gap:14px; flex-wrap:wrap; font-size:0.75rem; margin-top:4px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .legend i { width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .dados-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .dados-grid button { font-size:0.82rem; padding:9px 8px; }
+  .status-info { font-size:0.78rem; color:var(--muted); margin-top:10px; text-align:center; }
+</style>
+</head>
+<body>
+
+<h1>📚 Simulador Contábil</h1>
+<p class="subtitle">Escolha as contas, lance os valores e veja o balanço e os razonetes se desenhando em tempo real.</p>
+
+<div id="banner-missing" style="display:none;"></div>
+
+<div class="layout">
+  <div class="left-col">
+    <div class="panel">
+      <h2>Novo lançamento</h2>
+      <div class="tabs">
+        <button class="tab active" data-mode="lancamento">Débito + Crédito</button>
+        <button class="tab" data-mode="avulso">Conta avulsa</button>
+      </div>
+      <div id="form-lancamento">
+        <label>Conta de Débito</label>
+        <select id="sel-debito"></select>
+        <label>Conta de Crédito</label>
+        <select id="sel-credito"></select>
+        <div id="hint-contrapartida" class="hint" style="display:none;"></div>
+        <label>Valor (R$)</label>
+        <input type="number" id="inp-valor" min="0.01" step="0.01" placeholder="0,00">
+        <label>Descrição (opcional)</label>
+        <textarea id="inp-descricao" maxlength="500" rows="2" placeholder="Ex.: Integralização de capital pelos sócios"></textarea>
+        <div class="char-count"><span id="char-count-lanc">0</span> / 500</div>
+        <div class="actions"><button id="btn-lancar">Lançar</button></div>
+      </div>
+      <div id="form-avulso" style="display:none;">
+        <label>Conta</label>
+        <select id="sel-conta-avulsa"></select>
+        <label>Lado</label>
+        <select id="sel-side">
+          <option value="debito">Débito (lado esquerdo)</option>
+          <option value="credito">Crédito (lado direito)</option>
+        </select>
+        <label>Valor (R$)</label>
+        <input type="number" id="inp-valor-avulso" min="0.01" step="0.01" placeholder="0,00">
+        <label>Descrição (opcional)</label>
+        <textarea id="inp-descricao-avulso" maxlength="500" rows="2" placeholder="Nota sobre este lançamento"></textarea>
+        <div class="char-count"><span id="char-count-avulso">0</span> / 500</div>
+        <div class="actions"><button id="btn-lancar-avulso">Adicionar</button></div>
+        <div class="hint warn">Adiciona só <b>um lado</b>. Se você não lançar a contrapartida, o balanço não fecha.</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>📁 Dados</h2>
+      <div class="dados-grid">
+        <button class="secondary" id="btn-import-contas">Importar contas</button>
+        <button class="secondary" id="btn-export-contas">Exportar contas</button>
+        <button class="secondary" id="btn-import-lanc">Importar lançamentos</button>
+        <button class="secondary" id="btn-export-lanc">Exportar lançamentos</button>
+      </div>
+      <div class="status-info" id="status-save">💾 Salvo automaticamente no navegador</div>
+      <input type="file" id="file-contas" accept=".csv,text/csv" style="display:none;">
+      <input type="file" id="file-lanc" accept=".csv,text/csv" style="display:none;">
+    </div>
+
+    <div class="panel">
+      <h2 style="display:flex; justify-content:space-between; align-items:center;">
+        Histórico
+        <button id="btn-reset" class="secondary" style="padding:4px 10px; font-size:0.72rem;">Limpar tudo</button>
+      </h2>
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;">⋮⋮ Arraste pela alça para reordenar. O nº <b>#</b> se ajusta sozinho.</div>
+      <div id="historico"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Balanço</h2>
+    <div class="balanco">
+      <div class="balanco-col">
+        <h3 style="color:var(--ativo);">Ativo</h3>
+        <div id="lista-ativo"></div>
+        <div class="total"><span>Total Ativo</span><span id="tot-ativo">R$ 0,00</span></div>
+      </div>
+      <div class="balanco-col">
+        <h3 style="color:var(--passivo);">Passivo + PL + Resultado</h3>
+        <div id="lista-passivo"></div>
+        <div id="lista-pl"></div>
+        <div id="lista-resultado"></div>
+        <div class="total"><span>Total</span><span id="tot-passivo-pl">R$ 0,00</span></div>
+      </div>
+    </div>
+    <div id="check" class="check ok">Balanço zerado. Adicione um lançamento para começar.</div>
+  </div>
+</div>
+
+<div class="panel" style="margin-top:20px;">
+  <h2>Razonetes</h2>
+  <div class="legend">
+    <span><i style="background:var(--ativo);"></i> Ativo (devedora)</span>
+    <span><i style="background:var(--passivo);"></i> Passivo (credora)</span>
+    <span><i style="background:var(--pl);"></i> PL (credora)</span>
+    <span><i style="background:var(--receita);"></i> Receita (credora)</span>
+    <span><i style="background:var(--despesa);"></i> Despesa (devedora)</span>
+  </div>
+  <div class="razonetes-grid" id="razonetes"></div>
+  <div id="razonetes-empty" class="empty">Nenhum lançamento ainda. Adicione um ao lado para ver os razonetes aparecerem.</div>
+</div>
+
+<div class="panel" style="margin-top:20px;">
+  <h2>🎯 Primeiros movimentos sugeridos</h2>
+  <ol style="margin:0;padding-left:22px;font-size:0.88rem;line-height:1.75;">
+    <li><b>Integralização do capital</b> — D <b>Caixa</b> / C <b>Capital Social</b> — R$ 10.000</li>
+    <li><b>Compra de imobilizado à vista</b> — D <b>Móveis e Utensílios</b> / C <b>Caixa</b> — R$ 3.000</li>
+    <li><b>Compra de estoque a prazo</b> — D <b>Estoques</b> / C <b>Fornecedores</b> — R$ 2.000</li>
+    <li><b>Despesa com telefone à vista</b> — D <b>Despesa com Telefone</b> / C <b>Caixa</b> — R$ 200</li>
+    <li><b>Venda à vista</b> — D <b>Caixa</b> / C <b>Receita de Vendas</b> — R$ 4.000</li>
+    <li><b>Baixa do estoque (CMV)</b> — D <b>CMV</b> / C <b>Estoques</b> — R$ 1.500</li>
+  </ol>
+  <div class="hint" style="margin-top:14px;">
+    <b>Plano com 51 contas.</b> Contas com <b>(−)</b> no nome são <b>retificadoras</b>. No Histórico, arraste pela alça <b>⋮⋮</b> para reordenar.
+  </div>
+</div>
+
+<script>
+
+
+// ============================================================
+// CSV PADRÃO DE CONTAS (51 contas)
+// ============================================================
+const DEFAULT_CONTAS_CSV = `id;nome;grupo;retificadora;como_debito;como_credito
+caixa;Caixa;ativo;nao;capital|bancos|clientes|adiant_clientes|rec_vendas|rec_servicos|rec_financeiras|aplic_financ|emprestimos;moveis|veiculos|imoveis|intangivel|estoques|estoque_material|desp_antecipadas|adiant_fornecedores|fornecedores|desp_aluguel|desp_salarios|desp_encargos|desp_energia|desp_agua|desp_telefone|desp_internet|desp_material|desp_seguros|desp_manutencao|desp_marketing|desp_financeiras|desp_impostos|alugueis_pagar|contas_pagar|salarios_pagar|juros_pagar|impostos_recolher|inss_recolher|fgts_recolher|emprestimos|dividendos_pagar|bancos|aplic_financ|devolucoes_vendas
+bancos;Bancos;ativo;nao;capital|clientes|adiant_clientes|rec_vendas|rec_servicos|rec_financeiras|aplic_financ|emprestimos|caixa;moveis|veiculos|imoveis|intangivel|estoques|estoque_material|desp_antecipadas|adiant_fornecedores|fornecedores|desp_aluguel|desp_salarios|desp_encargos|desp_energia|desp_agua|desp_telefone|desp_internet|desp_material|desp_seguros|desp_manutencao|desp_marketing|desp_financeiras|desp_impostos|alugueis_pagar|contas_pagar|salarios_pagar|juros_pagar|impostos_recolher|inss_recolher|fgts_recolher|emprestimos|dividendos_pagar|caixa|aplic_financ|devolucoes_vendas
+aplic_financ;Aplicações Financeiras;ativo;nao;caixa|bancos|rec_financeiras;caixa|bancos
+clientes;Clientes;ativo;nao;rec_vendas|rec_servicos;caixa|bancos|pcld|devolucoes_vendas
+adiant_fornecedores;Adiantamentos a Fornecedores;ativo;nao;caixa|bancos;estoques|estoque_material|moveis|veiculos|imoveis|intangivel
+estoques;Estoques;ativo;nao;caixa|bancos|fornecedores|adiant_fornecedores;cmv
+estoque_material;Estoque de Material de Consumo;ativo;nao;caixa|bancos|fornecedores|adiant_fornecedores;desp_material
+desp_antecipadas;Despesas Antecipadas;ativo;nao;caixa|bancos;desp_seguros|desp_aluguel
+moveis;Móveis e Utensílios;ativo;nao;caixa|bancos|fornecedores|adiant_fornecedores;
+veiculos;Veículos;ativo;nao;caixa|bancos|fornecedores|emprestimos|adiant_fornecedores;
+imoveis;Imóveis;ativo;nao;caixa|bancos|fornecedores|emprestimos|adiant_fornecedores;
+intangivel;Marcas e Patentes;ativo;nao;caixa|bancos|fornecedores|adiant_fornecedores;
+depreciacao;Depreciação Acumulada;ativo;sim;;desp_depreciacao
+pcld;(-) PCLD;ativo;sim;clientes;perdas_devedores
+fornecedores;Fornecedores;passivo;nao;estoques|estoque_material|moveis|veiculos|imoveis|intangivel|desp_energia|desp_agua|desp_telefone|desp_internet|desp_material|desp_seguros|desp_manutencao|desp_marketing;caixa|bancos
+salarios_pagar;Salários a Pagar;passivo;nao;desp_salarios;caixa|bancos
+alugueis_pagar;Aluguéis a Pagar;passivo;nao;desp_aluguel;caixa|bancos
+contas_pagar;Contas a Pagar;passivo;nao;desp_energia|desp_agua|desp_telefone|desp_internet|desp_material|desp_seguros|desp_manutencao|desp_marketing|desp_impostos;caixa|bancos
+emprestimos;Empréstimos a Pagar;passivo;nao;caixa|bancos;caixa|bancos
+juros_pagar;Juros a Pagar;passivo;nao;caixa|bancos;desp_financeiras
+impostos_recolher;Impostos a Recolher;passivo;nao;caixa|bancos;desp_impostos|impostos_vendas
+inss_recolher;INSS a Recolher;passivo;nao;caixa|bancos;desp_encargos
+fgts_recolher;FGTS a Recolher;passivo;nao;caixa|bancos;desp_encargos
+adiant_clientes;Adiantamentos de Clientes;passivo;nao;rec_vendas|rec_servicos;caixa|bancos
+dividendos_pagar;Dividendos a Pagar;passivo;nao;caixa|bancos;lucros
+capital;Capital Social;pl;nao;;caixa|bancos|moveis|veiculos|imoveis|intangivel|capital_realizar
+capital_realizar;(-) Capital a Realizar;pl;sim;capital;caixa|bancos|moveis|veiculos|imoveis|intangivel
+reserva_legal;Reserva Legal;pl;nao;;lucros
+lucros;Lucros Acumulados;pl;nao;;reserva_legal|dividendos_pagar
+prejuizos;Prejuízos Acumulados;pl;sim;;
+rec_vendas;Receita de Vendas;receita;nao;;caixa|bancos|clientes|adiant_clientes
+rec_servicos;Receita de Serviços;receita;nao;;caixa|bancos|clientes|adiant_clientes
+rec_financeiras;Receitas Financeiras;receita;nao;;caixa|bancos|aplic_financ
+impostos_vendas;(-) Impostos sobre Vendas;receita;sim;impostos_recolher;
+devolucoes_vendas;(-) Devoluções de Vendas;receita;sim;caixa|bancos|clientes;
+desp_salarios;Despesa de Salários;despesa;nao;caixa|bancos|salarios_pagar;
+desp_encargos;Despesa de Encargos Sociais;despesa;nao;caixa|bancos|inss_recolher|fgts_recolher;
+desp_aluguel;Despesa de Aluguel;despesa;nao;caixa|bancos|alugueis_pagar|desp_antecipadas;
+desp_energia;Despesa de Energia;despesa;nao;caixa|bancos|contas_pagar|fornecedores;
+desp_agua;Despesa de Água;despesa;nao;caixa|bancos|contas_pagar|fornecedores;
+desp_telefone;Despesa com Telefone;despesa;nao;caixa|bancos|fornecedores|contas_pagar;
+desp_internet;Despesa com Internet;despesa;nao;caixa|bancos|fornecedores|contas_pagar;
+desp_material;Despesa de Material de Consumo;despesa;nao;caixa|bancos|fornecedores|contas_pagar|estoque_material;
+desp_seguros;Despesa de Seguros;despesa;nao;caixa|bancos|fornecedores|contas_pagar|desp_antecipadas;
+desp_manutencao;Despesa de Manutenção;despesa;nao;caixa|bancos|fornecedores|contas_pagar;
+desp_marketing;Despesa de Marketing e Publicidade;despesa;nao;caixa|bancos|fornecedores|contas_pagar;
+desp_depreciacao;Despesa de Depreciação;despesa;nao;depreciacao;
+perdas_devedores;Perdas com Devedores Duvidosos;despesa;nao;pcld;
+desp_financeiras;Despesas Financeiras;despesa;nao;caixa|bancos|juros_pagar;
+desp_impostos;Impostos e Contribuições;despesa;nao;caixa|bancos|impostos_recolher|contas_pagar;
+cmv;CMV;despesa;nao;estoques;`;
+
+// ============================================================
+// ESTADO
+// ============================================================
+let contas = {};
+let lancamentos = [];
+let modoAtual = 'lancamento';
+
+const GRUPOS = ['ativo', 'passivo', 'pl', 'receita', 'despesa'];
+const GRUPO_LABEL = {ativo:'Ativo', passivo:'Passivo', pl:'Patrimônio Líquido', receita:'Receita', despesa:'Despesa / Custo'};
+const GRUPO_NATUREZA = {ativo:'devedora', passivo:'credora', pl:'credora', receita:'credora', despesa:'devedora'};
+
+const fmt = n => n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtValorCSV = n => n.toFixed(2).replace('.', ',');
+
+// ============================================================
+// CSV
+// ============================================================
+function parseCSV(text, sep = ';') {
+  const rows = [];
+  let cur = '', row = [], inQuote = false, i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQuote) {
+      if (ch === '"') {
+        if (text[i+1] === '"') { cur += '"'; i += 2; continue; }
+        inQuote = false; i++; continue;
+      }
+      cur += ch; i++; continue;
+    }
+    if (ch === '"' && cur === '') { inQuote = true; i++; continue; }
+    if (ch === sep) { row.push(cur); cur = ''; i++; continue; }
+    if (ch === '\r') { i++; continue; }
+    if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; i++; continue; }
+    cur += ch; i++;
+  }
+  if (cur !== '' || row.length > 0) { row.push(cur); rows.push(row); }
+  return rows.filter(r => r.some(c => c.trim() !== ''));
+}
+
+function csvEscape(val) {
+  const s = String(val ?? '');
+  if (/[;"\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function parseValorNum(s) {
+  if (!s) return NaN;
+  s = String(s).trim();
+  if (s.includes(',')) return parseFloat(s.replace(/\./g, '').replace(',', '.'));
+  return parseFloat(s);
+}
+
+function parseContasCSV(text) {
+  const rows = parseCSV(text);
+  if (rows.length === 0) throw new Error('CSV vazio.');
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  for (const req of ['id', 'nome', 'grupo']) {
+    if (!header.includes(req)) throw new Error(`Coluna obrigatória ausente: "${req}".`);
+  }
+  const idx = {};
+  header.forEach((h, i) => { idx[h] = i; });
+
+  const result = {};
+  for (let li = 1; li < rows.length; li++) {
+    const cols = rows[li];
+    const id = (cols[idx.id] || '').trim();
+    const nome = (cols[idx.nome] || '').trim();
+    const grupo = (cols[idx.grupo] || '').trim();
+    if (!id || !nome || !grupo) throw new Error(`Linha ${li + 1}: id, nome e grupo são obrigatórios.`);
+    if (!GRUPOS.includes(grupo)) throw new Error(`Linha ${li + 1}: grupo inválido "${grupo}".`);
+    if (result[id]) throw new Error(`Linha ${li + 1}: id "${id}" duplicado.`);
+    result[id] = {
+      id, nome, grupo,
+      retificadora: ((cols[idx.retificadora] || 'nao') || '').trim().toLowerCase() === 'sim',
+      como_debito: (cols[idx.como_debito] || '').split('|').map(x => x.trim()).filter(Boolean),
+      como_credito: (cols[idx.como_credito] || '').split('|').map(x => x.trim()).filter(Boolean),
+    };
+  }
+  for (const id of Object.keys(result)) {
+    result[id].como_debito = result[id].como_debito.filter(r => result[r]);
+    result[id].como_credito = result[id].como_credito.filter(r => result[r]);
+  }
+  return result;
+}
+
+function serializeContasCSV() {
+  const lines = ['id;nome;grupo;retificadora;como_debito;como_credito'];
+  for (const id of Object.keys(contas)) {
+    const c = contas[id];
+    lines.push([
+      csvEscape(c.id), csvEscape(c.nome), csvEscape(c.grupo),
+      c.retificadora ? 'sim' : 'nao',
+      csvEscape((c.como_debito || []).join('|')),
+      csvEscape((c.como_credito || []).join('|'))
+    ].join(';'));
+  }
+  return lines.join('\n');
+}
+
+function parseLancamentosCSV(text) {
+  const rows = parseCSV(text);
+  if (rows.length === 0) return [];
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  for (const req of ['tipo','debito_id','credito_id','valor']) {
+    if (!header.includes(req)) throw new Error(`Coluna obrigatória ausente: "${req}".`);
+  }
+  const idx = {};
+  header.forEach((h, i) => { idx[h] = i; });
+
+  const result = [];
+  const missing = new Set();
+  for (let li = 1; li < rows.length; li++) {
+    const cols = rows[li];
+    const tipo = (cols[idx.tipo] || '').trim().toLowerCase();
+    const debId = (cols[idx.debito_id] || '').trim();
+    const creId = (cols[idx.credito_id] || '').trim();
+    const valor = parseValorNum(cols[idx.valor] || '');
+    const descricao = (idx.descricao !== undefined ? (cols[idx.descricao] || '') : '').trim();
+    if (!valor || valor <= 0) throw new Error(`Linha ${li + 1}: valor inválido.`);
+
+    if (tipo === 'lancamento') {
+      if (!debId || !creId) throw new Error(`Linha ${li + 1}: lançamento precisa de debito_id e credito_id.`);
+      if (!contas[debId]) missing.add(debId);
+      if (!contas[creId]) missing.add(creId);
+      result.push({tipo:'lancamento', debito:debId, credito:creId, valor, descricao});
+    } else if (tipo === 'avulso_debito') {
+      if (!debId) throw new Error(`Linha ${li + 1}: avulso_debito precisa de debito_id.`);
+      if (!contas[debId]) missing.add(debId);
+      result.push({tipo:'avulso', conta:debId, side:'debito', valor, descricao});
+    } else if (tipo === 'avulso_credito') {
+      if (!creId) throw new Error(`Linha ${li + 1}: avulso_credito precisa de credito_id.`);
+      if (!contas[creId]) missing.add(creId);
+      result.push({tipo:'avulso', conta:creId, side:'credito', valor, descricao});
+    } else {
+      throw new Error(`Linha ${li + 1}: tipo inválido "${tipo}".`);
+    }
+  }
+  if (missing.size > 0) {
+    throw new Error(`Contas não encontradas no plano de contas: ${Array.from(missing).join(', ')}.`);
+  }
+  return result;
+}
+
+function serializeLancamentosCSV() {
+  const lines = ['tipo;debito_id;debito_nome;credito_id;credito_nome;valor;descricao'];
+  for (const l of lancamentos) {
+    const desc = csvEscape(l.descricao || '');
+    const valorStr = fmtValorCSV(l.valor);
+    if (l.tipo === 'lancamento') {
+      lines.push([
+        'lancamento',
+        csvEscape(l.debito), csvEscape(contas[l.debito]?.nome || l.debito),
+        csvEscape(l.credito), csvEscape(contas[l.credito]?.nome || l.credito),
+        valorStr, desc
+      ].join(';'));
+    } else if (l.tipo === 'avulso') {
+      if (l.side === 'debito') {
+        lines.push(['avulso_debito', csvEscape(l.conta), csvEscape(contas[l.conta]?.nome || l.conta), '', '', valorStr, desc].join(';'));
+      } else {
+        lines.push(['avulso_credito', '', '', csvEscape(l.conta), csvEscape(contas[l.conta]?.nome || l.conta), valorStr, desc].join(';'));
+      }
+    }
+  }
+  return lines.join('\n');
+}
+
+function downloadCSV(filename, content) {
+  const blob = new Blob(['\ufeff' + content], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ============================================================
+// PERSISTÊNCIA
+// ============================================================
+function saveState() {
+  try {
+    localStorage.setItem('sim_contas', JSON.stringify(contas));
+    localStorage.setItem('sim_lancamentos', JSON.stringify(lancamentos));
+    const st = document.getElementById('status-save');
+    if (st) st.textContent = `💾 Salvo automaticamente · ${new Date().toLocaleTimeString('pt-BR')}`;
+  } catch(e) { console.warn('Erro ao salvar:', e); }
+}
+
+function loadState() {
+  let cs = null, ls = null;
+  try { cs = localStorage.getItem('sim_contas'); } catch(e){}
+  try { ls = localStorage.getItem('sim_lancamentos'); } catch(e){}
+  if (cs) { try { contas = JSON.parse(cs); } catch(e) { contas = parseContasCSV(DEFAULT_CONTAS_CSV); } }
+  else { contas = parseContasCSV(DEFAULT_CONTAS_CSV); }
+  if (ls) { try { lancamentos = JSON.parse(ls); } catch(e) { lancamentos = []; } }
+  else { lancamentos = []; }
+}
+
+// ============================================================
+// SELECTS
+// ============================================================
+function buildOptionsFor(selectEl, sugeridas, currentValue) {
+  selectEl.innerHTML = '';
+  const empty = document.createElement('option');
+  empty.value = ''; empty.textContent = '— escolha a conta —';
+  selectEl.appendChild(empty);
+
+  const sugSet = new Set(sugeridas || []);
+  if (sugSet.size > 0) {
+    const sugList = [];
+    for (const g of GRUPOS) {
+      for (const id of Object.keys(contas)) {
+        if (contas[id].grupo === g && sugSet.has(id)) sugList.push(id);
+      }
+    }
+    if (sugList.length > 0) {
+      const og = document.createElement('optgroup');
+      og.label = '✓ Contrapartidas sugeridas';
+      for (const id of sugList) {
+        const o = document.createElement('option');
+        o.value = id; o.textContent = contas[id].nome;
+        og.appendChild(o);
+      }
+      selectEl.appendChild(og);
+    }
+  }
+  for (const g of GRUPOS) {
+    const rest = Object.keys(contas).filter(id => contas[id].grupo === g && !sugSet.has(id));
+    if (rest.length === 0) continue;
+    const og = document.createElement('optgroup');
+    og.label = GRUPO_LABEL[g];
+    for (const id of rest) {
+      const o = document.createElement('option');
+      o.value = id; o.textContent = contas[id].nome;
+      og.appendChild(o);
+    }
+    selectEl.appendChild(og);
+  }
+  selectEl.value = (currentValue && contas[currentValue]) ? currentValue : '';
+}
+
+function refreshCreditoSelect() {
+  const debId = document.getElementById('sel-debito').value;
+  const credEl = document.getElementById('sel-credito');
+  const cur = credEl.value;
+  const sug = (debId && contas[debId]) ? (contas[debId].como_debito || []) : [];
+  buildOptionsFor(credEl, sug, cur);
+  checkContrapartida();
+}
+
+function refreshDebitoSelect() {
+  const credId = document.getElementById('sel-credito').value;
+  const debEl = document.getElementById('sel-debito');
+  const cur = debEl.value;
+  const sug = (credId && contas[credId]) ? (contas[credId].como_credito || []) : [];
+  buildOptionsFor(debEl, sug, cur);
+  checkContrapartida();
+}
+
+function refreshAvulsoSelect() {
+  const el = document.getElementById('sel-conta-avulsa');
+  buildOptionsFor(el, [], el.value);
+}
+
+function checkContrapartida() {
+  const debId = document.getElementById('sel-debito').value;
+  const credId = document.getElementById('sel-credito').value;
+  const hint = document.getElementById('hint-contrapartida');
+  if (!debId || !credId || !contas[debId] || !contas[credId]) {
+    hint.style.display = 'none'; return;
+  }
+  const dSug = (contas[debId].como_debito || []).includes(credId);
+  const cSug = (contas[credId].como_credito || []).includes(debId);
+  if (dSug || cSug) {
+    hint.style.display = 'block';
+    hint.className = 'hint ok';
+    hint.innerHTML = `✓ Combinação natural: <b>${contas[debId].nome}</b> dialoga com <b>${contas[credId].nome}</b>.`;
+  } else {
+    const sug = (contas[debId].como_debito || []).map(id => contas[id]?.nome).filter(Boolean);
+    const txt = sug.length > 0
+      ? `Normalmente quando você debita <b>${contas[debId].nome}</b>, credita uma dessas: ${sug.slice(0,5).join(', ')}${sug.length > 5 ? '...' : ''}.`
+      : `Não há contrapartidas cadastradas para <b>${contas[debId].nome}</b>.`;
+    hint.style.display = 'block';
+    hint.className = 'hint warn';
+    hint.innerHTML = `⚠️ Combinação incomum. ${txt} Você pode lançar mesmo assim.`;
+  }
+}
+
+// ============================================================
+// AÇÕES
+// ============================================================
+function lancar() {
+  const debito = document.getElementById('sel-debito').value;
+  const credito = document.getElementById('sel-credito').value;
+  const valor = parseFloat(document.getElementById('inp-valor').value);
+  const descricao = document.getElementById('inp-descricao').value.trim();
+  if (!debito || !credito) return alert('Escolha as duas contas.');
+  if (debito === credito) return alert('Débito e crédito não podem ser a mesma conta.');
+  if (!valor || valor <= 0) return alert('Informe um valor válido.');
+  lancamentos.push({tipo:'lancamento', debito, credito, valor, descricao});
+  document.getElementById('inp-valor').value = '';
+  document.getElementById('inp-descricao').value = '';
+  document.getElementById('char-count-lanc').textContent = '0';
+  render(); saveState();
+}
+
+function lancarAvulso() {
+  const conta = document.getElementById('sel-conta-avulsa').value;
+  const side = document.getElementById('sel-side').value;
+  const valor = parseFloat(document.getElementById('inp-valor-avulso').value);
+  const descricao = document.getElementById('inp-descricao-avulso').value.trim();
+  if (!conta) return alert('Escolha a conta.');
+  if (!valor || valor <= 0) return alert('Informe um valor válido.');
+  lancamentos.push({tipo:'avulso', conta, side, valor, descricao});
+  document.getElementById('inp-valor-avulso').value = '';
+  document.getElementById('inp-descricao-avulso').value = '';
+  document.getElementById('char-count-avulso').textContent = '0';
+  render(); saveState();
+}
+
+// ============================================================
+// CÁLCULOS
+// ============================================================
+function getMovimento(contaId) {
+  const debitos = [], creditos = [];
+  for (const l of lancamentos) {
+    if (l.tipo === 'lancamento') {
+      if (l.debito === contaId) debitos.push({valor:l.valor, ref: contas[l.credito]?.nome || l.credito, desc: l.descricao || ''});
+      if (l.credito === contaId) creditos.push({valor:l.valor, ref: contas[l.debito]?.nome || l.debito, desc: l.descricao || ''});
+    } else {
+      if (l.conta === contaId && l.side === 'debito') debitos.push({valor:l.valor, ref:'(avulso)', desc: l.descricao || ''});
+      if (l.conta === contaId && l.side === 'credito') creditos.push({valor:l.valor, ref:'(avulso)', desc: l.descricao || ''});
+    }
+  }
+  return {debitos, creditos};
+}
+
+function saldoRaw(contaId) {
+  const m = getMovimento(contaId);
+  const d = m.debitos.reduce((s,x)=>s+x.valor,0);
+  const c = m.creditos.reduce((s,x)=>s+x.valor,0);
+  return d - c;
+}
+
+function contasPorGrupo(g) { return Object.keys(contas).filter(id => contas[id].grupo === g); }
+function contasComMovimento() {
+  return Object.keys(contas).filter(id => {
+    const m = getMovimento(id);
+    return m.debitos.length + m.creditos.length > 0;
+  });
+}
+function checkMissingRefs() {
+  const missing = new Set();
+  for (const l of lancamentos) {
+    if (l.tipo === 'lancamento') {
+      if (!contas[l.debito]) missing.add(l.debito);
+      if (!contas[l.credito]) missing.add(l.credito);
+    } else {
+      if (!contas[l.conta]) missing.add(l.conta);
+    }
+  }
+  return Array.from(missing);
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+  renderBannerMissing();
+  renderBalanco();
+  renderRazonetes();
+  renderHistorico();
+}
+
+function renderBannerMissing() {
+  const b = document.getElementById('banner-missing');
+  const missing = checkMissingRefs();
+  if (missing.length > 0) {
+    b.style.display = 'block';
+    b.innerHTML = `⚠️ Lançamentos referenciando contas inexistentes: <b>${escapeHtml(missing.join(', '))}</b>. Reimporte o plano de contas ou edite o CSV.`;
+  } else {
+    b.style.display = 'none';
+  }
+}
+
+function displayValor(c) {
+  if (c.retificadora && c.saldo < 0) return `(−) ${fmt(Math.abs(c.saldo))}`;
+  return fmt(c.saldo);
+}
+
+function renderBalanco() {
+  let totAtivo = 0;
+  const listAtivo = document.getElementById('lista-ativo');
+  listAtivo.innerHTML = '';
+  const ativos = contasPorGrupo('ativo')
+    .map(id => ({...contas[id], saldo: saldoRaw(id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  if (!ativos.length) listAtivo.innerHTML = '<div class="linha zero"><span>(sem conta)</span><span>—</span></div>';
+  for (const c of ativos) {
+    totAtivo += c.saldo;
+    const tag = c.retificadora ? ' <span style="color:#94a3b8;font-size:0.72rem;">(retif.)</span>' : '';
+    listAtivo.innerHTML += `<div class="linha"><span>${escapeHtml(c.nome)}${tag}</span><span class="valor">${displayValor(c)}</span></div>`;
+  }
+  document.getElementById('tot-ativo').textContent = fmt(totAtivo);
+
+  let totPassivo = 0;
+  const listPassivo = document.getElementById('lista-passivo');
+  listPassivo.innerHTML = '';
+  const passivos = contasPorGrupo('passivo')
+    .map(id => ({...contas[id], saldo: -saldoRaw(id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  for (const c of passivos) {
+    totPassivo += c.saldo;
+    listPassivo.innerHTML += `<div class="linha"><span>${escapeHtml(c.nome)}</span><span class="valor">${fmt(c.saldo)}</span></div>`;
+  }
+
+  let totPL = 0;
+  const listPL = document.getElementById('lista-pl');
+  listPL.innerHTML = '';
+  const pls = contasPorGrupo('pl')
+    .map(id => ({...contas[id], saldo: -saldoRaw(id)}))
+    .filter(c => Math.abs(c.saldo) > 0.001);
+  for (const c of pls) {
+    totPL += c.saldo;
+    const tag = c.retificadora ? ' <span style="color:#94a3b8;font-size:0.72rem;">(retif.)</span>' : '';
+    listPL.innerHTML += `<div class="linha"><span>${escapeHtml(c.nome)}${tag}</span><span class="valor">${displayValor(c)}</span></div>`;
+  }
+
+  let totRec = 0, totDesp = 0;
+  for (const id of contasPorGrupo('receita')) totRec += -saldoRaw(id);
+  for (const id of contasPorGrupo('despesa')) totDesp += saldoRaw(id);
+  const resultado = totRec - totDesp;
+  const listRes = document.getElementById('lista-resultado');
+  listRes.innerHTML = '';
+  if (Math.abs(totRec) > 0.001 || Math.abs(totDesp) > 0.001) {
+    if (Math.abs(totRec) > 0.001) listRes.innerHTML += `<div class="linha"><span>Receitas</span><span class="valor">${fmt(totRec)}</span></div>`;
+    if (Math.abs(totDesp) > 0.001) listRes.innerHTML += `<div class="linha"><span>(−) Despesas/Custos</span><span class="valor">${fmt(-totDesp)}</span></div>`;
+    listRes.innerHTML += `<div class="subtotal"><span>= Resultado do período</span><span class="valor">${fmt(resultado)}</span></div>`;
+  }
+
+  const totPassivoPL = totPassivo + totPL + resultado;
+  document.getElementById('tot-passivo-pl').textContent = fmt(totPassivoPL);
+
+  const check = document.getElementById('check');
+  const diff = Math.abs(totAtivo - totPassivoPL);
+  if (lancamentos.length === 0) {
+    check.className = 'check ok';
+    check.textContent = 'Balanço zerado. Adicione um lançamento para começar.';
+  } else if (diff < 0.01) {
+    check.className = 'check ok';
+    check.textContent = `✓ Balanço fechado: Ativo ${fmt(totAtivo)} = Passivo + PL + Resultado ${fmt(totPassivoPL)}`;
+  } else {
+    check.className = 'check bad';
+    check.textContent = `✗ Balanço não fecha — diferença de ${fmt(diff)}.`;
+  }
+}
+
+function renderRazonetes() {
+  const grid = document.getElementById('razonetes');
+  const empty = document.getElementById('razonetes-empty');
+  grid.innerHTML = '';
+  const ids = contasComMovimento();
+  if (ids.length === 0) { empty.style.display = ''; return; }
+  empty.style.display = 'none';
+
+  for (const id of ids) {
+    const c = contas[id];
+    if (!c) continue;
+    const m = getMovimento(id);
+    const raw = m.debitos.reduce((s,x)=>s+x.valor,0) - m.creditos.reduce((s,x)=>s+x.valor,0);
+    const tipo = raw > 0.001 ? 'devedor' : raw < -0.001 ? 'credor' : 'zerado';
+    const valor = Math.abs(raw);
+
+    const liItem = (x) => {
+      const title = x.desc ? ` title="${escapeHtml(x.desc)}"` : '';
+      return `<li${title}><span>${escapeHtml(x.ref)}</span><span>${fmt(x.valor)}</span></li>`;
+    };
+
+    const div = document.createElement('div');
+    div.className = 'razonete';
+    div.innerHTML = `
+      <div class="razonete-title ${c.grupo}">
+        <span>${escapeHtml(c.nome)}${c.retificadora ? ' (retif.)' : ''}</span>
+        <span class="natureza">${GRUPO_LABEL[c.grupo]} · ${GRUPO_NATUREZA[c.grupo]}</span>
+      </div>
+      <div class="razonete-body">
+        <div class="razonete-side">
+          <h4>Débito</h4>
+          <ul>${m.debitos.map(liItem).join('') || '<li style="color:#94a3b8;">—</li>'}</ul>
+        </div>
+        <div class="razonete-side">
+          <h4>Crédito</h4>
+          <ul>${m.creditos.map(liItem).join('') || '<li style="color:#94a3b8;">—</li>'}</ul>
+        </div>
+      </div>
+      <div class="razonete-saldo">
+        <span>Saldo</span>
+        <span class="${tipo}">${fmt(valor)}${tipo === 'devedor' ? ' D' : tipo === 'credor' ? ' C' : ''}</span>
+      </div>
+    `;
+    grid.appendChild(div);
+  }
+}
+
+// ============================================================
+// HISTÓRICO COM DRAG-AND-DROP
+// ============================================================
+function renderHistorico() {
+  const el = document.getElementById('historico');
+  el.innerHTML = '';
+  if (lancamentos.length === 0) {
+    el.innerHTML = '<div class="empty">Nenhum lançamento ainda.</div>';
+    return;
+  }
+
+  const lista = document.createElement('div');
+  lista.className = 'historico-lista';
+  lista.id = 'historico-lista';
+
+  lancamentos.forEach((l, i) => {
+    let deb, cre;
+    if (l.tipo === 'lancamento') {
+      deb = contas[l.debito]?.nome || l.debito + ' ⚠';
+      cre = contas[l.credito]?.nome || l.credito + ' ⚠';
+    } else {
+      deb = l.side === 'debito' ? (contas[l.conta]?.nome || l.conta + ' ⚠') : '—';
+      cre = l.side === 'credito' ? (contas[l.conta]?.nome || l.conta + ' ⚠') : '—';
+    }
+
+    const item = document.createElement('div');
+    item.className = 'historico-item';
+    item.draggable = true;
+    item.dataset.index = i;
+
+    item.innerHTML = `
+      <div class="drag-handle" title="Arraste para reordenar">⋮⋮</div>
+      <div class="historico-content">
+        <div class="historico-row">
+          <span class="historico-num">${i+1}</span>
+          <span class="historico-debito" title="${escapeHtml(deb)}">${escapeHtml(deb)}</span>
+          <span class="historico-credito" title="${escapeHtml(cre)}">${escapeHtml(cre)}</span>
+          <span class="historico-valor">${fmt(l.valor)}</span>
+          <button class="btn-remove-item" type="button" title="Remover lançamento">×</button>
+        </div>
+        ${l.descricao ? `<div class="historico-desc">📝 ${escapeHtml(l.descricao)}</div>` : ''}
+      </div>
+    `;
+
+    const btnRemove = item.querySelector('.btn-remove-item');
+    btnRemove.addEventListener('mousedown', (e) => e.stopPropagation());
+    btnRemove.addEventListener('click', (e) => {
+      e.stopPropagation();
+      lancamentos.splice(i, 1);
+      render(); saveState();
+    });
+
+    lista.appendChild(item);
+  });
+
+  el.appendChild(lista);
+  setupDragAndDrop(lista);
+}
+
+function setupDragAndDrop(lista) {
+  let draggingEl = null;
+
+  lista.addEventListener('dragstart', (e) => {
+    const item = e.target.closest('.historico-item');
+    if (!item) return;
+    if (e.target.closest('.btn-remove-item')) { e.preventDefault(); return; }
+    draggingEl = item;
+    item.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    try { e.dataTransfer.setData('text/plain', ''); } catch(_) {}
+  });
+
+  lista.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (!draggingEl) return;
+    const afterEl = getDragAfterElement(lista, e.clientY);
+    if (afterEl == null) {
+      lista.appendChild(draggingEl);
+    } else if (afterEl !== draggingEl) {
+      lista.insertBefore(draggingEl, afterEl);
+    }
+  });
+
+  lista.addEventListener('drop', (e) => e.preventDefault());
+
+  lista.addEventListener('dragend', () => {
+    if (!draggingEl) return;
+    draggingEl.classList.remove('dragging');
+    const items = [...lista.querySelectorAll('.historico-item')];
+    const old = lancamentos;
+    lancamentos = items.map(el => old[parseInt(el.dataset.index)]);
+    draggingEl = null;
+    render();
+    saveState();
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const candidates = [...container.querySelectorAll('.historico-item:not(.dragging)')];
+  let closest = { offset: -Infinity, element: null };
+  for (const el of candidates) {
+    const rect = el.getBoundingClientRect();
+    const offset = y - rect.top - rect.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      closest = { offset, element: el };
+    }
+  }
+  return closest.element;
+}
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+function handleImportContas(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const novo = parseContasCSV(e.target.result);
+      const backup = contas;
+      contas = novo;
+      const refsFaltantes = checkMissingRefs();
+      contas = backup;
+
+      let msg = `Importar ${Object.keys(novo).length} contas?`;
+      msg += `\n\nO plano atual tem ${Object.keys(contas).length} contas.`;
+      if (refsFaltantes.length > 0) {
+        msg += `\n\n⚠️ ATENÇÃO: alguns lançamentos referenciam contas que deixarão de existir: ${refsFaltantes.join(', ')}.`;
+      }
+      msg += '\n\nO plano atual será substituído. Continuar?';
+      if (!confirm(msg)) return;
+      contas = novo;
+      render(); saveState();
+      refreshAvulsoSelect(); refreshCreditoSelect(); refreshDebitoSelect();
+      alert(`✓ ${Object.keys(contas).length} contas importadas.`);
+    } catch (err) { alert('Erro ao importar contas:\n\n' + err.message); }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function handleExportContas() { downloadCSV('plano_contas.csv', serializeContasCSV()); }
+
+function handleImportLanc(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const novo = parseLancamentosCSV(e.target.result);
+      if (!confirm(`Importar ${novo.length} lançamentos?\n\nO histórico atual (${lancamentos.length}) será substituído. Continuar?`)) return;
+      lancamentos = novo;
+      render(); saveState();
+      alert(`✓ ${lancamentos.length} lançamentos importados.`);
+    } catch (err) { alert('Erro ao importar lançamentos:\n\n' + err.message); }
+  };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function handleExportLanc() { downloadCSV('lancamentos.csv', serializeLancamentosCSV()); }
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadState();
+  buildOptionsFor(document.getElementById('sel-debito'), [], '');
+  buildOptionsFor(document.getElementById('sel-credito'), [], '');
+  buildOptionsFor(document.getElementById('sel-conta-avulsa'), [], '');
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      modoAtual = tab.dataset.mode;
+      document.getElementById('form-lancamento').style.display = modoAtual === 'lancamento' ? '' : 'none';
+      document.getElementById('form-avulso').style.display = modoAtual === 'avulso' ? '' : 'none';
+    });
+  });
+
+  document.getElementById('sel-debito').addEventListener('change', refreshCreditoSelect);
+  document.getElementById('sel-credito').addEventListener('change', refreshDebitoSelect);
+  document.getElementById('btn-lancar').addEventListener('click', lancar);
+  document.getElementById('btn-lancar-avulso').addEventListener('click', lancarAvulso);
+
+  document.getElementById('inp-descricao').addEventListener('input', (e) => {
+    document.getElementById('char-count-lanc').textContent = e.target.value.length;
+  });
+  document.getElementById('inp-descricao-avulso').addEventListener('input', (e) => {
+    document.getElementById('char-count-avulso').textContent = e.target.value.length;
+  });
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    if (lancamentos.length === 0) return;
+    if (confirm('Limpar todos os lançamentos?')) { lancamentos = []; render(); saveState(); }
+  });
+
+  document.getElementById('btn-import-contas').addEventListener('click', () => document.getElementById('file-contas').click());
+  document.getElementById('btn-export-contas').addEventListener('click', handleExportContas);
+  document.getElementById('btn-import-lanc').addEventListener('click', () => document.getElementById('file-lanc').click());
+  document.getElementById('btn-export-lanc').addEventListener('click', handleExportLanc);
+
+  document.getElementById('file-contas').addEventListener('change', (e) => {
+    const f = e.target.files[0]; if (f) handleImportContas(f); e.target.value = '';
+  });
+  document.getElementById('file-lanc').addEventListener('change', (e) => {
+    const f = e.target.files[0]; if (f) handleImportLanc(f); e.target.value = '';
+  });
+
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
+
