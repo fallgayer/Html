@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Azimute entre pontos</title>
+<style>
+  :root{
+    --bg:#0f1512;
+    --panel:#16211c;
+    --line:#2a3a33;
+    --ink:#e7efe9;
+    --ink-dim:#9db3a8;
+    --accent:#5fd7a3;
+    --accent-dim:#3a7a5c;
+    --mono:'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+    --serif:'IBM Plex Serif',Georgia,serif;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+    box-sizing:border-box;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#f3f1ea;
+      --panel:#ffffff;
+      --line:#d9d3c4;
+      --ink:#1c2420;
+      --ink-dim:#5b6b62;
+      --accent:#1f7a52;
+      --accent-dim:#bfe3d1;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f1512; --panel:#16211c; --line:#2a3a33; --ink:#e7efe9; --ink-dim:#9db3a8;
+    --accent:#5fd7a3; --accent-dim:#3a7a5c;
+  }
+  html,body{height:100%;}
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--serif);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:2.2rem 1.4rem 3rem;
+  }
+  h1{
+    font-size:1.5rem;
+    font-weight:600;
+    margin:0 0 .2rem;
+    letter-spacing:-.01em;
+  }
+  .sub{
+    color:var(--ink-dim);
+    font-size:.92rem;
+    margin:0 0 1.8rem;
+    max-width:60ch;
+  }
+  label.field-label{
+    display:block;
+    font-family:var(--mono);
+    font-size:.72rem;
+    color:var(--ink-dim);
+    margin-bottom:.4rem;
+  }
+  textarea{
+    width:100%;
+    min-height:130px;
+    background:var(--panel);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:.8rem .9rem;
+    font-family:var(--mono);
+    font-size:.85rem;
+    resize:vertical;
+  }
+  textarea:focus, select:focus, button:focus{
+    outline:2px solid var(--accent);
+    outline-offset:1px;
+  }
+  .row{
+    display:flex;
+    gap:.7rem;
+    margin-top:1rem;
+    flex-wrap:wrap;
+  }
+  button{
+    background:var(--accent);
+    color:var(--bg);
+    border:none;
+    border-radius:6px;
+    padding:.65rem 1.2rem;
+    font-family:var(--serif);
+    font-weight:600;
+    font-size:.9rem;
+    cursor:pointer;
+  }
+  button.secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1px solid var(--line);
+  }
+  .points-table{
+    margin-top:1.6rem;
+    border-top:1px solid var(--line);
+  }
+  .point-row{
+    display:grid;
+    grid-template-columns:1.4rem 1fr auto;
+    gap:.6rem;
+    align-items:center;
+    padding:.55rem 0;
+    border-bottom:1px solid var(--line);
+    font-size:.85rem;
+  }
+  .point-idx{
+    font-family:var(--mono);
+    color:var(--ink-dim);
+    font-size:.75rem;
+  }
+  .point-coords{
+    font-family:var(--mono);
+    color:var(--ink-dim);
+    font-size:.78rem;
+  }
+  .selectors{
+    display:flex;
+    gap:1rem;
+    margin-top:1.6rem;
+    flex-wrap:wrap;
+  }
+  .sel-block{flex:1; min-width:180px;}
+  select{
+    width:100%;
+    background:var(--panel);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:.55rem .7rem;
+    font-family:var(--serif);
+    font-size:.9rem;
+  }
+  .result{
+    margin-top:1.8rem;
+    display:none;
+  }
+  .result.show{display:block;}
+  .az-pair{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+  }
+  .az-cell{
+    background:var(--panel);
+    padding:1rem 1.1rem;
+  }
+  .az-cell .dir{
+    font-family:var(--mono);
+    font-size:.72rem;
+    color:var(--ink-dim);
+    margin-bottom:.5rem;
+  }
+  .az-cell .val{
+    font-family:var(--mono);
+    font-size:1.9rem;
+    font-weight:600;
+    color:var(--accent);
+    line-height:1;
+  }
+  .az-cell .deg{font-size:1.1rem; color:var(--ink-dim); font-weight:400;}
+  .meta{
+    margin-top:.9rem;
+    font-family:var(--mono);
+    font-size:.78rem;
+    color:var(--ink-dim);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:.4rem;
+  }
+  .err{
+    margin-top:1rem;
+    color:#e37b6a;
+    font-family:var(--mono);
+    font-size:.82rem;
+    display:none;
+  }
+  .err.show{display:block;}
+  .compass{
+    margin-top:1.4rem;
+    display:flex;
+    justify-content:center;
+  }
+  svg{max-width:100%;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Azimute entre pontos</h1>
+  <p class="sub">Cole os pontos no formato <code>label,latitude,longitude</code> (uma linha de cabeçalho é opcional) e escolha o par para calcular o azimute de A→B e o contra-azimute de B→A.</p>
+
+  <label class="field-label">DADOS (CSV)</label>
+  <textarea id="input" spellcheck="false">label,latitude,longitude
+"Ponto 1",-30.03080947631381,-51.192090961670026
+"Ponto 2",-30.06526678776418,-51.220953710170036</textarea>
+
+  <div class="row">
+    <button id="parseBtn">Processar pontos</button>
+    <button class="secondary" id="clearBtn">Limpar</button>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <div id="tableWrap"></div>
+
+  <div class="selectors" id="selectors" style="display:none;">
+    <div class="sel-block">
+      <label class="field-label">PONTO A</label>
+      <select id="selA"></select>
+    </div>
+    <div class="sel-block">
+      <label class="field-label">PONTO B</label>
+      <select id="selB"></select>
+    </div>
+  </div>
+
+  <div class="result" id="result">
+    <div class="az-pair">
+      <div class="az-cell">
+        <div class="dir" id="labelAB">A → B</div>
+        <div class="val" id="azAB">--<span class="deg">°</span></div>
+      </div>
+      <div class="az-cell">
+        <div class="dir" id="labelBA">B → A (contra-azimute)</div>
+        <div class="val" id="azBA">--<span class="deg">°</span></div>
+      </div>
+    </div>
+    <div class="meta">
+      <span id="dist"></span>
+      <span id="diffNote"></span>
+    </div>
+    <div class="compass" id="compassWrap"></div>
+  </div>
+</div>
+
+<script>
+const input = document.getElementById('input');
+const parseBtn = document.getElementById('parseBtn');
+const clearBtn = document.getElementById('clearBtn');
+const errBox = document.getElementById('err');
+const tableWrap = document.getElementById('tableWrap');
+const selectors = document.getElementById('selectors');
+const selA = document.getElementById('selA');
+const selB = document.getElementById('selB');
+const resultBox = document.getElementById('result');
+
+let points = [];
+
+function showErr(msg){
+  errBox.textContent = msg;
+  errBox.classList.add('show');
+}
+function clearErr(){
+  errBox.textContent = '';
+  errBox.classList.remove('show');
+}
+
+function parseCSV(text){
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length);
+  const pts = [];
+  for (const line of lines){
+    // divide respeitando aspas simples em torno do label
+    const m = line.match(/^"?([^",]+)"?\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if (!m) continue;
+    const label = m[1].trim();
+    const lat = parseFloat(m[2]);
+    const lon = parseFloat(m[3]);
+    if (label.toLowerCase() === 'label' && isNaN(lat)) continue;
+    if (isNaN(lat) || isNaN(lon)) continue;
+    if (Math.abs(lat) > 90 || Math.abs(lon) > 180) continue;
+    pts.push({label, lat, lon});
+  }
+  return pts;
+}
+
+function toRad(d){ return d * Math.PI / 180; }
+function toDeg(r){ return r * 180 / Math.PI; }
+
+function azimuth(p1, p2){
+  const φ1 = toRad(p1.lat), φ2 = toRad(p2.lat);
+  const Δλ = toRad(p2.lon - p1.lon);
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+  return (toDeg(θ) + 360) % 360;
+}
+
+function haversineKm(p1, p2){
+  const R = 6371.0088;
+  const φ1 = toRad(p1.lat), φ2 = toRad(p2.lat);
+  const Δφ = toRad(p2.lat - p1.lat);
+  const Δλ = toRad(p2.lon - p1.lon);
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function renderTable(){
+  if (!points.length){
+    tableWrap.innerHTML = '';
+    return;
+  }
+  let html = '<div class="points-table">';
+  points.forEach((p, i) => {
+    html += `<div class="point-row">
+      <div class="point-idx">${i+1}</div>
+      <div>${p.label}</div>
+      <div class="point-coords">${p.lat.toFixed(6)}, ${p.lon.toFixed(6)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  tableWrap.innerHTML = html;
+}
+
+function fillSelects(){
+  selA.innerHTML = '';
+  selB.innerHTML = '';
+  points.forEach((p, i) => {
+    const optA = document.createElement('option');
+    optA.value = i; optA.textContent = p.label;
+    selA.appendChild(optA);
+    const optB = document.createElement('option');
+    optB.value = i; optB.textContent = p.label;
+    selB.appendChild(optB);
+  });
+  selA.value = 0;
+  selB.value = points.length > 1 ? 1 : 0;
+}
+
+function drawCompass(azAB){
+  const size = 160;
+  const cx = size/2, cy = size/2, r = size/2 - 14;
+  const rad = toRad(azAB - 90); // 0° = norte (topo), rotação horária
+  const x2 = cx + r * Math.cos(rad);
+  const y2 = cy + r * Math.sin(rad);
+  return `
+  <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+    <text x="${cx}" y="14" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--ink-dim)">N</text>
+    <text x="${size-10}" y="${cy+4}" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--ink-dim)">L</text>
+    <text x="${cx}" y="${size-6}" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--ink-dim)">S</text>
+    <text x="12" y="${cy+4}" text-anchor="middle" font-family="var(--mono)" font-size="10" fill="var(--ink-dim)">O</text>
+    <line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="${cx}" cy="${cy}" r="3" fill="var(--accent)"/>
+  </svg>`;
+}
+
+function compute(){
+  clearErr();
+  if (points.length < 2){
+    showErr('São necessários ao menos 2 pontos.');
+    resultBox.classList.remove('show');
+    return;
+  }
+  const iA = parseInt(selA.value, 10);
+  const iB = parseInt(selB.value, 10);
+  if (iA === iB){
+    showErr('Escolha dois pontos diferentes.');
+    resultBox.classList.remove('show');
+    return;
+  }
+  const A = points[iA], B = points[iB];
+  const azABval = azimuth(A, B);
+  const azBAval = azimuth(B, A);
+  const distKm = haversineKm(A, B);
+
+  document.getElementById('labelAB').textContent = `${A.label} → ${B.label}`;
+  document.getElementById('labelBA').textContent = `${B.label} → ${A.label} (contra-azimute)`;
+  document.getElementById('azAB').innerHTML = azABval.toFixed(2) + '<span class="deg">°</span>';
+  document.getElementById('azBA').innerHTML = azBAval.toFixed(2) + '<span class="deg">°</span>';
+  document.getElementById('dist').textContent = 'distância: ' + distKm.toFixed(3) + ' km';
+
+  const diff = Math.abs((azBAval - azABval + 540) % 360 - 180);
+  document.getElementById('diffNote').textContent = diff > 0.05
+    ? `contra-azimute ≠ azimute + 180° (diferença de ${diff.toFixed(2)}°, efeito da convergência de meridianos)`
+    : 'contra-azimute = azimute + 180°';
+
+  document.getElementById('compassWrap').innerHTML = drawCompass(azABval);
+  resultBox.classList.add('show');
+}
+
+parseBtn.addEventListener('click', () => {
+  clearErr();
+  points = parseCSV(input.value);
+  if (!points.length){
+    showErr('Nenhum ponto válido encontrado. Verifique o formato: label,latitude,longitude');
+    tableWrap.innerHTML = '';
+    selectors.style.display = 'none';
+    resultBox.classList.remove('show');
+    return;
+  }
+  renderTable();
+  fillSelects();
+  selectors.style.display = 'flex';
+  compute();
+});
+
+clearBtn.addEventListener('click', () => {
+  input.value = '';
+  points = [];
+  tableWrap.innerHTML = '';
+  selectors.style.display = 'none';
+  resultBox.classList.remove('show');
+  clearErr();
+});
+
+selA.addEventListener('change', compute);
+selB.addEventListener('change', compute);
+
+// processa os dados de exemplo já ao carregar
+parseBtn.click();
+</script>
+</body>
+</html>
