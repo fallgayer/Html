@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mapa de Pins</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.0.0/dist/maplibre-gl.css" />
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.0.0/dist/maplibre-gl.js"></script>
 <style>
   :root{
     --bg:#0d1117;
@@ -145,6 +145,29 @@
     font-size:12px;
     color:var(--muted);
   }
+  #locate-btn{
+    position:absolute;
+    top:10px;
+    right:98px;
+    z-index:1000;
+    width:34px;
+    height:34px;
+    border-radius:8px;
+    background:var(--panel);
+    border:1px solid var(--border);
+    color:var(--accent);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  #locate-btn:hover{ background:#1c2531; }
+  #locate-btn.loading{ animation: locate-pulse 1s infinite ease-in-out; }
+  @keyframes locate-pulse{
+    0%,100%{ opacity:1; }
+    50%{ opacity:.4; }
+  }
   #layer-btn{
     position:absolute;
     top:10px;
@@ -204,7 +227,7 @@
       width:340px;
     }
     header .hint{ display:none; }
-    .leaflet-control-zoom{
+    .maplibregl-ctrl-bottom-left{
       margin-bottom:28px !important;
     }
   }
@@ -306,24 +329,46 @@
     text-align:center;
     height:14px;
   }
-  .leaflet-popup-content-wrapper{
+  .maplibregl-popup-content{
     background:#1c2531;
     color:var(--text);
   }
-  .leaflet-popup-tip{ background:#1c2531; }
-  .leaflet-control-zoom a{
+  .maplibregl-popup-tip{ background:#1c2531; }
+  .maplibregl-ctrl-group{
     background:var(--panel) !important;
-    color:var(--accent) !important;
     border-color:var(--border) !important;
   }
-  .leaflet-control-zoom a:hover{
+  .maplibregl-ctrl-group button{
+    background:var(--panel) !important;
+    color:var(--accent) !important;
+  }
+  .maplibregl-ctrl-group button:hover{
     background:#1c2531 !important;
   }
-  .leaflet-control-attribution{
+  .maplibregl-ctrl-attrib{
     background:rgba(13,17,23,.7) !important;
     color:var(--muted) !important;
   }
-  .leaflet-control-attribution a{ color:var(--accent) !important; }
+  .maplibregl-ctrl-attrib a{ color:var(--accent) !important; }
+  .user-location-dot{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:var(--accent);
+    border:2px solid #fff;
+    box-shadow:0 0 0 4px rgba(79,209,197,.35);
+  }
+  .user-location-pulse{
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:rgba(79,209,197,.35);
+    animation: user-pulse 1.6s infinite ease-out;
+  }
+  @keyframes user-pulse{
+    0%{ transform:scale(1); opacity:.7; }
+    100%{ transform:scale(2.6); opacity:0; }
+  }
 </style>
 </head>
 <body>
@@ -339,6 +384,7 @@
     <input type="text" id="search-input" placeholder="🔍 Pesquisar lugar...">
     <div id="search-results"></div>
   </div>
+  <button id="locate-btn" title="Meu local">🎯</button>
   <button id="layer-btn" title="Tipo de mapa">🗺️</button>
   <div id="layer-menu"></div>
   <button id="toggle-btn" title="Mostrar/ocultar lista">☰</button>
@@ -366,64 +412,98 @@
 </div>
 
 <script>
-  const map = L.map('map', { zoomControl: false }).setView([-30.0346, -51.2177], 12); // Porto Alegre
-  L.control.zoom({ position: 'bottomleft' }).addTo(map);
-
+  // --- Definição dos mapas base ---
+  // Estilos vetoriais (OpenFreeMap) usam `style`.
+  // Mapas raster (Esri, OpenTopoMap) usam `tiles`.
   const basemaps = {
     escuro: {
       name: 'Escuro',
       icon: '🌑',
-      url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      maxZoom: 19
+      style: 'https://tiles.openfreemap.org/styles/dark'
     },
     claro: {
       name: 'Claro',
       icon: '☀️',
-      url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-      maxZoom: 19
+      style: 'https://tiles.openfreemap.org/styles/positron'
     },
     ruas: {
-      name: 'Ruas (OSM)',
+      name: 'Ruas',
       icon: '🛣️',
-      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      attribution: '&copy; OpenStreetMap contributors',
-      maxZoom: 19
+      style: 'https://tiles.openfreemap.org/styles/bright'
     },
     satelite: {
       name: 'Satélite',
       icon: '🛰️',
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+      ],
       attribution: '&copy; Esri',
-      maxZoom: 19
+      maxzoom: 19
     },
     relevo: {
       name: 'Relevo',
       icon: '⛰️',
-      url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-      attribution: '&copy; OpenTopoMap contributors',
-      maxZoom: 17
+      tiles: [
+        'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+        'https://b.tile.opentopomap.org/{z}/{x}/{y}.png',
+        'https://c.tile.opentopomap.org/{z}/{x}/{y}.png'
+      ],
+      attribution: '&copy; OpenTopoMap',
+      maxzoom: 17
     }
   };
 
   let currentBasemapKey = 'escuro';
-  let currentTileLayer = L.tileLayer(basemaps[currentBasemapKey].url, {
-    attribution: basemaps[currentBasemapKey].attribution,
-    maxZoom: basemaps[currentBasemapKey].maxZoom
-  }).addTo(map);
 
+  // --- Inicialização do mapa ---
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: basemaps[currentBasemapKey].style,
+    center: [-51.2177, -30.0346], // Porto Alegre (lng, lat)
+    zoom: 12,
+    attributionControl: true
+  });
+
+  map.addControl(new maplibregl.NavigationControl(), 'bottom-left');
+
+  // --- Troca de mapa base (vetorial <-> raster) ---
   function switchBasemap(key){
     if(key === currentBasemapKey) return;
-    map.removeLayer(currentTileLayer);
-    currentTileLayer = L.tileLayer(basemaps[key].url, {
-      attribution: basemaps[key].attribution,
-      maxZoom: basemaps[key].maxZoom
-    }).addTo(map);
+    const bm = basemaps[key];
+
+    if(bm.style){
+      // Vetorial: simplesmente troca o style
+      map.setStyle(bm.style);
+    } else if(bm.tiles){
+      // Raster: cria um style vazio + adiciona source/layer após o styledata
+      map.setStyle({
+        version: 8,
+        sources: {},
+        layers: [
+          { id: 'background', type: 'background', paint: { 'background-color': '#0d1117' } }
+        ]
+      });
+      map.once('styledata', () => {
+        if(!map.getSource(key)){
+          map.addSource(key, {
+            type: 'raster',
+            tiles: bm.tiles,
+            tileSize: 256,
+            attribution: bm.attribution,
+            maxzoom: bm.maxzoom || 19
+          });
+          // Insere antes das camadas de marcador (se existirem)
+          const firstSymbol = map.getStyle().layers.find(l => l.type === 'symbol');
+          map.addLayer({ id: key, type: 'raster', source: key }, firstSymbol ? firstSymbol.id : undefined);
+        }
+      });
+    }
+
     currentBasemapKey = key;
     renderLayerMenu();
   }
 
+  // --- Menu de camadas ---
   function renderLayerMenu(){
     const menu = document.getElementById('layer-menu');
     menu.innerHTML = '';
@@ -452,6 +532,7 @@
     }
   });
 
+  // --- Painel lateral ---
   const panel = document.getElementById('panel');
   const toggleBtn = document.getElementById('toggle-btn');
 
@@ -459,22 +540,19 @@
     return window.matchMedia('(max-width: 640px)').matches;
   }
 
-  // Painel começa recolhido no celular, aberto no desktop
   if(isMobile()){
     panel.classList.add('collapsed');
   }
 
   toggleBtn.addEventListener('click', () => {
     panel.classList.toggle('collapsed');
-    setTimeout(() => map.invalidateSize(), 220);
+    setTimeout(() => map.resize(), 220);
   });
 
-  panel.addEventListener('transitionend', () => map.invalidateSize());
+  panel.addEventListener('transitionend', () => map.resize());
 
-  // Corrige o corte dos controles quando a barra de endereço do navegador
-  // mobile aparece/desaparece e muda a altura real da viewport
   function fixViewportHeight(){
-    map.invalidateSize();
+    map.resize();
   }
   window.addEventListener('resize', fixViewportHeight);
   window.addEventListener('orientationchange', () => setTimeout(fixViewportHeight, 300));
@@ -525,7 +603,7 @@
       const data = await resp.json();
       renderResults(data);
     }catch(err){
-      searchResults.innerHTML = `<div id="search-loading">Erro na busca (${escapeHtml(err.message || 'rede bloqueada')}).<br>Se estiver vendo isso na pré-visualização do chat, baixe o arquivo e abra direto no navegador.</div>`;
+      searchResults.innerHTML = `<div id="search-loading">Erro na busca (${escapeHtml(err.message || 'rede bloqueada')}).</div>`;
     }
   }
 
@@ -545,7 +623,7 @@
       div.addEventListener('click', () => {
         const lat = parseFloat(r.lat);
         const lng = parseFloat(r.lon);
-        map.flyTo([lat, lng], 16);
+        map.flyTo({ center: [lng, lat], zoom: 16 });
         addPin(lat, lng, mainName);
         closeResults();
         searchInput.value = '';
@@ -553,6 +631,10 @@
       searchResults.appendChild(div);
     });
   }
+
+  // --- Gerenciamento de Pins ---
+  let pins = [];
+  let idCounter = 1;
 
   function addPin(lat, lng, label){
     const pin = {
@@ -566,29 +648,31 @@
     renderList();
   }
 
-  let pins = [];
-  let idCounter = 1;
-
   function makeMarker(pin){
-    const marker = L.marker([pin.lat, pin.lng], {draggable:true}).addTo(map);
-    marker.bindPopup(`Ponto #${pin.id}`);
-    marker.on('dragend', function(){
-      const pos = marker.getLatLng();
-      pin.lat = pos.lat;
-      pin.lng = pos.lng;
+    const popup = new maplibregl.Popup().setText(`Ponto #${pin.id}`);
+    const marker = new maplibregl.Marker({draggable: true})
+      .setLngLat([pin.lng, pin.lat])
+      .setPopup(popup)
+      .addTo(map);
+
+    marker.on('dragend', () => {
+      const lngLat = marker.getLngLat();
+      pin.lat = lngLat.lat;
+      pin.lng = lngLat.lng;
       renderList();
     });
+
     return marker;
   }
 
-  map.on('click', function(e){
-    addPin(e.latlng.lat, e.latlng.lng);
+  map.on('click', (e) => {
+    addPin(e.lngLat.lat, e.lngLat.lng);
   });
 
   function removePin(id){
     const idx = pins.findIndex(p => p.id === id);
     if(idx !== -1){
-      map.removeLayer(pins[idx].marker);
+      pins[idx].marker.remove();
       pins.splice(idx, 1);
       renderList();
     }
@@ -624,7 +708,8 @@
         const pin = pins.find(p => p.id === id);
         if(pin){
           pin.label = e.target.value;
-          pin.marker.getPopup().setContent(escapeHtml(pin.label));
+          const popup = pin.marker.getPopup();
+          if(popup) popup.setText(pin.label);
         }
       });
     });
@@ -683,10 +768,56 @@
     });
   });
 
+  // --- Meu local (geolocalização) ---
+  const locateBtn = document.getElementById('locate-btn');
+  let userMarker = null;
+
+  function locateMe(){
+    if(!navigator.geolocation){
+      alert('Este navegador não suporta geolocalização.');
+      return;
+    }
+    locateBtn.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        locateBtn.classList.remove('loading');
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        if(userMarker){
+          userMarker.remove();
+        }
+
+        const el = document.createElement('div');
+        el.innerHTML = '<div class="user-location-pulse" style="position:absolute;"></div><div class="user-location-dot" style="position:absolute;"></div>';
+        userMarker = new maplibregl.Marker({ element: el, interactive: false })
+          .setLngLat([lng, lat])
+          .addTo(map);
+
+        map.flyTo({ center: [lng, lat], zoom: 16 });
+      },
+      (err) => {
+        locateBtn.classList.remove('loading');
+        let msg = 'Não foi possível obter sua localização.';
+        if(err.code === err.PERMISSION_DENIED){
+          msg = 'Permissão de localização negada. Habilite o acesso à localização para este site nas configurações do navegador.';
+        } else if(err.code === err.TIMEOUT){
+          msg = 'Tempo esgotado ao tentar obter sua localização. Tente novamente.';
+        } else if(err.code === err.POSITION_UNAVAILABLE){
+          msg = 'Localização indisponível no momento.';
+        }
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  locateBtn.addEventListener('click', locateMe);
+
   document.getElementById('btn-clear').addEventListener('click', () => {
     if(pins.length === 0) return;
     if(confirm('Remover todos os pontos?')){
-      pins.forEach(p => map.removeLayer(p.marker));
+      pins.forEach(p => p.marker.remove());
       pins = [];
       renderList();
     }
